@@ -9,6 +9,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/openapi-generator-core" />
+            <option value="$PROJECT_DIR$/openapi-generator-database-exporter" />
           </set>
         </option>
       </GradleProjectSettings>

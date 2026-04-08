@@ -5,7 +5,8 @@ Proyecto base para la generación de especificaciones OpenAPI mediante un pseudo
 ## Estructura del Proyecto
 
 *   **`openapi-generator-core`**: El motor principal (Librería). Contiene la lógica de transformación y plantillas FreeMarker.
-*   *Próximos proyectos*: CLI (Micronaut), DB-Integrator, etc.
+*   **`openapi-generator-database-exporter`**: Módulo para inspeccionar bases de datos y generar el pseudo-formato a partir de tablas existentes.
+*   *Próximos proyectos*: CLI (Micronaut), etc.
 
 ## Objetivo
 
