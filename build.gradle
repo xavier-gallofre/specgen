@@ -19,4 +19,12 @@ subprojects {
             languageVersion = JavaLanguageVersion.of(26)
         }
     }
+
+    tasks.withType(Test).configureEach {
+        testLogging {
+            events "passed", "skipped", "failed"
+            showStandardStreams = false // Mantenemos streams ocultos por defecto para evitar ruido, pero mostramos eventos
+            exceptionFormat "full"
+        }
+    }
 }
