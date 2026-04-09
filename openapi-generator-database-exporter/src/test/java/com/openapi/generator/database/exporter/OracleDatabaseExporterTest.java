@@ -33,6 +33,21 @@ public class OracleDatabaseExporterTest {
         String username = oracle.getUsername();
         String password = oracle.getPassword();
 
+        // Aseguramos que el script se haya ejecutado (Oracle puede tardar un poco tras 'startup')
+        try (Connection conn = DriverManager.getConnection(jdbcUrl, username, password)) {
+            System.out.println("[DEBUG_LOG] Conectado a Oracle para verificación manual...");
+            try (var rs = conn.getMetaData().getTables(null, username.toUpperCase(), "CUSTOMERS", null)) {
+                if (rs.next()) {
+                    System.out.println("[DEBUG_LOG] Tabla CUSTOMERS encontrada en Oracle");
+                } else {
+                    System.out.println("[DEBUG_LOG] ¡ADVERTENCIA! Tabla CUSTOMERS NO encontrada en Oracle. Reintentando creación...");
+                    try (var stmt = conn.createStatement()) {
+                        stmt.execute("CREATE TABLE CUSTOMERS (ID NUMBER(10) PRIMARY KEY, FIRST_NAME VARCHAR2(50) NOT NULL, LAST_NAME VARCHAR2(50), AGE NUMBER(3), CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+                    }
+                }
+            }
+        }
+
         // 2. Ejecutar inspección usando Hibernate settings
         DatabaseInspector inspector = new DatabaseInspector();
         java.util.Map<String, Object> settings = new java.util.HashMap<>();
@@ -41,6 +56,9 @@ public class OracleDatabaseExporterTest {
         settings.put("hibernate.connection.password", password);
         settings.put("hibernate.connection.driver_class", oracle.getDriverClassName());
         settings.put("hibernate.dialect", "org.hibernate.dialect.OracleDialect");
+        // Forzamos el esquema del usuario por defecto de Testcontainers (suele ser SYSTEM o TEST si se define)
+        // Pero Oracle lo devuelve en mayúsculas
+        settings.put("hibernate.default_schema", username.toUpperCase());
 
         OpenApiSpec spec = inspector.exportFromTables(settings, List.of("CUSTOMERS"));
 
