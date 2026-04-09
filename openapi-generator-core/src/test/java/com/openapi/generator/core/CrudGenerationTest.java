@@ -5,13 +5,19 @@ import com.openapi.generator.core.model.OpenApiSpec;
 import com.openapi.generator.core.model.PropertyDefinition;
 import com.openapi.generator.core.utils.YamlSerializer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CrudGenerationTest {
+
+    @TempDir
+    Path tempDir;
 
     @Test
     public void testGenerateCrud() throws Exception {
@@ -69,5 +75,32 @@ public class CrudGenerationTest {
         assertTrue(result.contains("title: API desde YAML"));
         assertTrue(result.contains("/customers:"));
         assertTrue(result.contains("Customer:"));
+    }
+
+    @Test
+    public void testGenerateToFile() throws Exception {
+        String yaml = """
+                info: API para Archivo
+                models:
+                - name: Item
+                  properties:
+                    id:
+                      type: integer
+                      required: true
+                  generate:
+                  - CRUD
+                """;
+
+        YamlSerializer serializer = new YamlSerializer();
+        OpenApiSpec spec = serializer.deserialize(yaml);
+
+        OpenApiGenerator generator = new OpenApiGenerator();
+        Path outputPath = tempDir.resolve("openapi.yaml");
+        generator.generateToFile(spec, outputPath.toString());
+
+        assertTrue(Files.exists(outputPath), "OpenAPI file should exist");
+        String content = Files.readString(outputPath);
+        assertTrue(content.contains("title: API para Archivo"));
+        assertTrue(content.contains("Item:"));
     }
 }

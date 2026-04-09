@@ -1,6 +1,7 @@
 package com.openapi.generator.core;
 
 import com.openapi.generator.core.model.OpenApiSpec;
+import com.openapi.generator.core.utils.FileUtils;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
@@ -27,6 +28,9 @@ public class OpenApiGenerator {
         this.cfg.setAPIBuiltinEnabled(true);
     }
 
+    /**
+     * Genera la especificación OpenAPI y la devuelve como String.
+     */
     public String generate(OpenApiSpec spec) throws IOException, TemplateException {
         Template temp = cfg.getTemplate("main.ftl");
         StringWriter out = new StringWriter();
@@ -39,5 +43,13 @@ public class OpenApiGenerator {
         
         temp.process(root, out);
         return out.toString();
+    }
+
+    /**
+     * Genera la especificación OpenAPI y la guarda en un archivo.
+     */
+    public void generateToFile(OpenApiSpec spec, String outputPath) throws IOException, TemplateException {
+        String content = generate(spec);
+        FileUtils.writeToFile(outputPath, content);
     }
 }
