@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.List;
 
@@ -16,14 +17,29 @@ public class DatabaseExporterIntegrationTest {
     public void testExportTableToOpenApiSpec() throws Exception {
         // 1. Setup DB H2 in memory
         String url = "jdbc:h2:mem:testdb_spec;DB_CLOSE_DELAY=-1";
+        // Usamos una conexión persistente para evitar que la DB desaparezca entre pasos si DB_CLOSE_DELAY no funcionara como esperamos
         try (Connection conn = DriverManager.getConnection(url)) {
             try (Statement stmt = conn.createStatement()) {
                 stmt.execute("CREATE TABLE USERS (ID INT PRIMARY KEY, NAME VARCHAR(100) NOT NULL, EMAIL VARCHAR(255))");
+                // Verificar que la tabla existe en PUBLIC
+                try (ResultSet rs = conn.getMetaData().getTables(null, "PUBLIC", "USERS", null)) {
+                    if (rs.next()) {
+                        System.out.println("[DEBUG_LOG] Tabla USERS creada con éxito en PUBLIC");
+                    } else {
+                        System.out.println("[DEBUG_LOG] ADVERTENCIA: Tabla USERS no encontrada en PUBLIC tras creación");
+                    }
+                }
             }
 
-            // 2. Inspect DB to generate pseudo-format (OpenApiSpec)
+            // 2. Inspect DB using Hibernate settings
             DatabaseInspector inspector = new DatabaseInspector();
-            OpenApiSpec spec = inspector.exportFromTables(conn, List.of("USERS"));
+            java.util.Map<String, Object> settings = new java.util.HashMap<>();
+            settings.put("hibernate.connection.url", url);
+            settings.put("hibernate.connection.driver_class", "org.h2.Driver");
+            // Forzamos el esquema por defecto para evitar INFORMATION_SCHEMA
+            settings.put("hibernate.default_schema", "PUBLIC");
+
+            OpenApiSpec spec = inspector.exportFromTables(settings, List.of("USERS"));
 
             // 3. Validate that the pseudo-format is correctly generated
             assertNotNull(spec, "The OpenApiSpec should not be null");
