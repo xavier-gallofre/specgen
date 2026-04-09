@@ -1,6 +1,7 @@
 package com.openapi.generator.database.exporter;
 
 import com.openapi.generator.core.model.OpenApiSpec;
+import com.openapi.generator.core.utils.YamlSerializer;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Connection;
@@ -60,6 +61,20 @@ public class DatabaseExporterIntegrationTest {
             assertEquals(50, customerModel.properties().get("FIRST_NAME").maxLength());
             assertTrue(customerModel.properties().get("FIRST_NAME").required());
             
+            // 4. Test YAML Serialization
+            YamlSerializer serializer = new YamlSerializer();
+            String yaml = serializer.serialize(spec);
+            System.out.println("[DEBUG_LOG] Exported YAML:\n" + yaml);
+            
+            assertTrue(yaml.contains("name: CUSTOMERS"), "YAML should contain table name");
+            assertTrue(yaml.contains("FIRST_NAME:"), "YAML should contain column name");
+            
+            // 5. Test YAML Deserialization
+            OpenApiSpec deserializedSpec = serializer.deserialize(yaml);
+            assertEquals(spec.info(), deserializedSpec.info());
+            assertEquals(spec.models().size(), deserializedSpec.models().size());
+            assertEquals(spec.models().get(0).name(), deserializedSpec.models().get(0).name());
+
             System.out.println("[DEBUG_LOG] Generated OpenApiSpec: " + spec);
         }
     }

@@ -3,6 +3,7 @@ package com.openapi.generator.core;
 import com.openapi.generator.core.model.ModelDefinition;
 import com.openapi.generator.core.model.OpenApiSpec;
 import com.openapi.generator.core.model.PropertyDefinition;
+import com.openapi.generator.core.utils.YamlSerializer;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -39,5 +40,34 @@ public class CrudGenerationTest {
         assertTrue(result.contains("/users/{id}:"));
         assertTrue(result.contains("User:"));
         assertTrue(result.contains("maxLength: 100"));
+    }
+
+    @Test
+    public void testGenerateFromYaml() throws Exception {
+        String yaml = """
+                info: API desde YAML
+                models:
+                - name: Customer
+                  properties:
+                    id:
+                      type: integer
+                      required: true
+                    email:
+                      type: string
+                  generate:
+                  - CRUD
+                """;
+
+        YamlSerializer serializer = new YamlSerializer();
+        OpenApiSpec spec = serializer.deserialize(yaml);
+
+        OpenApiGenerator generator = new OpenApiGenerator();
+        String result = generator.generate(spec);
+
+        System.out.println("[DEBUG_LOG] Output from YAML:\n" + result);
+
+        assertTrue(result.contains("title: API desde YAML"));
+        assertTrue(result.contains("/customers:"));
+        assertTrue(result.contains("Customer:"));
     }
 }
