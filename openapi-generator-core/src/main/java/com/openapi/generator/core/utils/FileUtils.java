@@ -46,4 +46,15 @@ public class FileUtils {
         }
         return props;
     }
+    /**
+     * Carga el contenido de un recurso desde el classpath.
+     */
+    public static String readResource(String resourceName) throws IOException {
+        try (var is = FileUtils.class.getClassLoader().getResourceAsStream(resourceName)) {
+            if (is == null) {
+                throw new IOException("No se pudo encontrar el recurso: " + resourceName);
+            }
+            return new String(is.readAllBytes());
+        }
+    }
 }

@@ -28,13 +28,11 @@ public class ShowcaseApp {
         // 2. Preparar Base de Datos (Simulando una BD real con H2)
         String url = (String) config.get("hibernate.connection.url");
         try (Connection conn = DriverManager.getConnection(url)) {
+            String sql = FileUtils.readResource("init.sql");
             try (Statement stmt = conn.createStatement()) {
-                stmt.execute("DROP TABLE IF EXISTS PRODUCTS");
-                stmt.execute("DROP TABLE IF EXISTS ORDERS");
-                stmt.execute("CREATE TABLE PRODUCTS (ID NUMBER(10) PRIMARY KEY, NAME VARCHAR2(100), PRICE NUMBER(10,2))");
-                stmt.execute("CREATE TABLE ORDERS (ID NUMBER(10) PRIMARY KEY, PRODUCT_ID NUMBER(10), QUANTITY NUMBER(5))");
+                stmt.execute(sql);
             }
-            System.out.println("Base de datos inicializada con tablas PRODUCTS y ORDERS.");
+            System.out.println("Base de datos inicializada desde init.sql.");
         }
 
         // 3. Inicializar el escritor de exportación con la configuración cargada
