@@ -18,10 +18,36 @@ public class ShowcaseIntegrationTest {
     public void runShowcase() throws Exception {
         // Ejecutar la aplicación principal pasando la carpeta temporal
         ShowcaseApp.main(new String[]{tempDir.toString()});
+        verifyResults(tempDir);
+    }
 
+    @Test
+    public void testSplitApps() throws Exception {
+        Path splitDir = tempDir.resolve("split");
+        Files.createDirectories(splitDir);
+        
+        // 1. Ejecutar Generador de Intermedios
+        IntermediateGeneratorApp.main(new String[]{splitDir.toString()});
+
+        // Verificar que existen parciales intermedios pero NO el mergeado final
+        Path intermediatePartialsPath = splitDir.resolve("intermediate/partials");
+        Path finalYamlPath = splitDir.resolve("openapi/showcase-openapi.yaml");
+
+        assertTrue(Files.exists(intermediatePartialsPath), "La carpeta intermediate/partials debe existir.");
+        assertTrue(Files.exists(intermediatePartialsPath.resolve("PRODUCTS.txt")), "Debe existir el parcial intermedio de PRODUCTS.");
+        assertTrue(!Files.exists(finalYamlPath), "El archivo final NO debería existir aún.");
+
+        // 2. Ejecutar Mezclador
+        OpenApiMergeApp.main(new String[]{splitDir.toString()});
+
+        // Ahora verificar resultados completos
+        verifyResults(splitDir);
+    }
+
+    private void verifyResults(Path outputBaseDir) throws Exception {
         // 1. Verificar carpetas parciales
-        Path intermediatePartialsPath = tempDir.resolve("intermediate/partials");
-        Path openapiPartialsPath = tempDir.resolve("openapi/partials");
+        Path intermediatePartialsPath = outputBaseDir.resolve("intermediate/partials");
+        Path openapiPartialsPath = outputBaseDir.resolve("openapi/partials");
 
         assertTrue(Files.exists(intermediatePartialsPath), "La carpeta intermediate/partials debe existir.");
         assertTrue(Files.exists(openapiPartialsPath), "La carpeta openapi/partials debe existir.");
@@ -33,8 +59,8 @@ public class ShowcaseIntegrationTest {
         assertTrue(Files.exists(openapiPartialsPath.resolve("ORDERS.yaml")), "Debe existir el parcial OpenAPI de ORDERS.");
 
         // 3. Verificar archivos finales consolidados (mergeados)
-        Path yamlPath = tempDir.resolve("openapi/showcase-openapi.yaml");
-        Path intermediatePath = tempDir.resolve("intermediate/showcase-intermediate.txt");
+        Path yamlPath = outputBaseDir.resolve("openapi/showcase-openapi.yaml");
+        Path intermediatePath = outputBaseDir.resolve("intermediate/showcase-intermediate.txt");
 
         assertTrue(Files.exists(yamlPath), "El archivo OpenAPI YAML consolidado debe existir.");
         assertTrue(Files.exists(intermediatePath), "El archivo intermedio consolidado debe existir.");
@@ -50,7 +76,5 @@ public class ShowcaseIntegrationTest {
         assertTrue(intermediateContent.contains("Generado desde parciales mergeados"), "El info debe indicar que fue mergeado.");
         assertTrue(intermediateContent.contains("name: PRODUCTS"), "Debe contener el modelo PRODUCTS.");
         assertTrue(intermediateContent.contains("name: ORDERS"), "Debe contener el modelo ORDERS.");
-        
-        System.out.println("[DEBUG_LOG] Showcase YAML content:\n" + yamlContent);
     }
 }

@@ -9,7 +9,7 @@
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/${model.name()}'
+                  $ref: '#/components/schemas/${model.name()?capitalize}'
     post:
       summary: Operación de creación (showcase)
       responses:

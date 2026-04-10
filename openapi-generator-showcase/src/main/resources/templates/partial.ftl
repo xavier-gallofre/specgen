@@ -8,7 +8,7 @@ paths:
 
 components:
   schemas:
-    ${model.name()}:
+    ${model.name()?capitalize}:
       type: object
       properties:
 <#list model.properties()?keys as propName>

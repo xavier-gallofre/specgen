@@ -1,6 +1,6 @@
   schemas:
 <#list models as model>
-    ${model.name()}:
+    ${model.name()?capitalize}:
       type: object
       description: Modelo para ${model.name()} generado en el showcase.
       properties:
