@@ -2,6 +2,7 @@ package com.openapi.generator.core;
 
 import com.openapi.generator.core.model.OpenApiSpec;
 import com.openapi.generator.core.utils.FileUtils;
+import com.openapi.generator.core.utils.TextUtils;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
@@ -35,6 +36,9 @@ public class OpenApiGenerator {
         // Permitir acceso directo a campos de Records en las plantillas
         this.cfg.setAPIBuiltinEnabled(true);
         this.additionalProperties = additionalProperties != null ? additionalProperties : new HashMap<>();
+        
+        // Añadir utilidades de texto al contexto global
+        this.additionalProperties.put("textUtils", new TextUtils());
     }
 
     /**
