@@ -38,6 +38,34 @@ public class OpenApiGenerator {
     }
 
     /**
+     * Genera la especificación OpenAPI para un solo modelo (parcial).
+     */
+    public String generatePartial(OpenApiSpec spec, String modelName) throws IOException, TemplateException {
+        // Soporte para configurar el recurso externo de plantillas si se define en las propiedades
+        if (additionalProperties.containsKey("templates.path")) {
+            String path = (String) additionalProperties.get("templates.path");
+            Path templateDirPath = Path.of(path);
+            if (Files.exists(templateDirPath) && Files.isDirectory(templateDirPath)) {
+                cfg.setDirectoryForTemplateLoading(templateDirPath.toFile());
+            }
+        }
+
+        var model = spec.models().stream()
+                .filter(m -> m.name().equals(modelName))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Modelo no encontrado: " + modelName));
+
+        Template temp = cfg.getTemplate("partial.ftl");
+        StringWriter out = new StringWriter();
+
+        Map<String, Object> root = new HashMap<>(additionalProperties);
+        root.put("model", model);
+
+        temp.process(root, out);
+        return out.toString();
+    }
+
+    /**
      * Genera la especificación OpenAPI y la devuelve como String.
      */
     public String generate(OpenApiSpec spec) throws IOException, TemplateException {

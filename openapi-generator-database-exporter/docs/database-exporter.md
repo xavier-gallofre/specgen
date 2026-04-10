@@ -52,6 +52,20 @@ DatabaseExportFileWriter writer = new DatabaseExportFileWriter(apiProps);
 writer.exportToYamlFile(dbSettings, List.of("USERS"), "api.yaml");
 ```
 
+### Exportación por Parciales y Consolidación (Merge)
+Es posible generar archivos individuales por cada tabla (parciales) y luego combinarlos en archivos finales. Esto es útil para flujos de trabajo donde se revisan los cambios tabla por tabla.
+
+```java
+DatabaseExportFileWriter writer = new DatabaseExportFileWriter(apiProps);
+String outputDir = "generated";
+
+// Genera parciales en generated/openapi/partials y generated/intermediate/partials
+writer.exportToPartialFiles(dbSettings, List.of("USERS", "PRODUCTS"), outputDir);
+
+// Combina los parciales en archivos finales
+writer.mergePartials(outputDir, "full-intermediate.txt", "full-openapi.yaml");
+```
+
 ## Configuración Avanzada
 
 ### Uso de Archivos .properties

@@ -36,18 +36,14 @@ public class ShowcaseApp {
         }
 
         // 3. Inicializar el escritor de exportación con la configuración cargada
-        // Esto usará las plantillas definidas en templates.path y las propiedades de api.*
         DatabaseExportFileWriter writer = new DatabaseExportFileWriter(config);
 
-        // 4. Exportar metadatos a carpeta de salida
-        String outputYaml = outputDir + "/showcase-openapi.yaml";
-        String outputIntermediate = outputDir + "/showcase-intermediate.txt";
+        // 4. Exportar a archivos parciales y luego mergear
+        System.out.println("Generando archivos parciales en carpeta: " + outputDir);
+        writer.exportToPartialFiles(config, List.of("PRODUCTS", "ORDERS"), outputDir);
 
-        System.out.println("Generando especificación OpenAPI en: " + outputYaml);
-        writer.exportToYamlFile(config, List.of("PRODUCTS", "ORDERS"), outputYaml);
-
-        System.out.println("Generando formato intermedio en: " + outputIntermediate);
-        writer.exportToIntermediateFile(config, List.of("PRODUCTS", "ORDERS"), outputIntermediate);
+        System.out.println("Mezclando archivos parciales...");
+        writer.mergePartials(outputDir, "showcase-intermediate.txt", "showcase-openapi.yaml");
 
         System.out.println("--- Showcase completado con éxito ---");
     }

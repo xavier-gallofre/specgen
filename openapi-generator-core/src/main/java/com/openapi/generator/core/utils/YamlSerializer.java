@@ -7,6 +7,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.openapi.generator.core.model.ModelDefinition;
 import com.openapi.generator.core.model.OpenApiSpec;
 
 import java.io.IOException;
@@ -31,10 +32,17 @@ public class YamlSerializer {
     }
 
     /**
-     * Serializa un OpenApiSpec a una cadena YAML.
+     * Serializa un objeto (OpenApiSpec o ModelDefinition) a una cadena YAML.
      */
-    public String serialize(OpenApiSpec spec) throws IOException {
-        return mapper.writeValueAsString(spec);
+    public String serialize(Object obj) throws IOException {
+        return mapper.writeValueAsString(obj);
+    }
+
+    /**
+     * Deserializa una cadena YAML a un ModelDefinition.
+     */
+    public ModelDefinition deserializeModel(String yaml) throws IOException {
+        return mapper.readValue(yaml, ModelDefinition.class);
     }
 
     /**
