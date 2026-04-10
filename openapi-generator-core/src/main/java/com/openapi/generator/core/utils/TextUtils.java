@@ -29,7 +29,17 @@ public class TextUtils {
      */
     public static String capitalize(String text) {
         if (text == null || text.isEmpty()) return text;
+        if (text.length() == 1) return text.toUpperCase();
         return text.substring(0, 1).toUpperCase() + text.substring(1).toLowerCase();
+    }
+
+    /**
+     * Capitaliza la primera letra de la cadena sin forzar el resto a minúsculas.
+     */
+    public static String capitalizeFirst(String text) {
+        if (text == null || text.isEmpty()) return text;
+        if (text.length() == 1) return text.toUpperCase();
+        return text.substring(0, 1).toUpperCase() + text.substring(1);
     }
 
     /**
@@ -38,13 +48,20 @@ public class TextUtils {
     public static String pluralize(String text) {
         if (text == null || text.isEmpty()) return text;
         String lower = text.toLowerCase();
+        
         if (lower.endsWith("y")) {
             if (isVowel(lower.charAt(lower.length() - 2))) {
                 return text + "s";
             }
             return text.substring(0, text.length() - 1) + "ies";
-        } else if (lower.endsWith("s") || lower.endsWith("sh") || lower.endsWith("ch") || lower.endsWith("x") || lower.endsWith("z")) {
+        } else if (lower.endsWith("sh") || lower.endsWith("ch") || lower.endsWith("x") || lower.endsWith("z")) {
             return text + "es";
+        } else if (lower.endsWith("s")) {
+            // Si ya termina en 's', comprobamos si parece plural o si es algo como 'class'
+            if (lower.endsWith("ss") || lower.endsWith("us") || lower.endsWith("is")) {
+                return text + "es";
+            }
+            return text; // Asumimos que ya es plural
         } else {
             return text + "s";
         }

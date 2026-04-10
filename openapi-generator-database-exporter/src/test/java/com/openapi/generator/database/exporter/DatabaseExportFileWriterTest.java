@@ -44,7 +44,7 @@ public class DatabaseExportFileWriterTest {
             assertTrue(Files.exists(yamlPath), "YAML file should exist");
             String yamlContent = Files.readString(yamlPath);
             assertTrue(yamlContent.contains("openapi: 3.0.3"), "YAML should be a valid OpenAPI spec");
-            assertTrue(yamlContent.contains("/test_tables:"), "YAML should contain generated path");
+            assertTrue(yamlContent.contains("/test-tables:"), "YAML should contain generated path");
 
             assertTrue(Files.exists(intermediatePath), "Intermediate file should exist");
             String intermediateContent = Files.readString(intermediatePath);
@@ -68,7 +68,7 @@ public class DatabaseExportFileWriterTest {
         assertTrue(Files.exists(yamlPath), "SQL YAML file should exist");
         String yamlContent = Files.readString(yamlPath);
         assertTrue(yamlContent.contains("openapi: 3.0.3"), "YAML should be a valid OpenAPI spec");
-        assertTrue(yamlContent.contains("/sql_tables:"), "YAML should contain generated path");
+        assertTrue(yamlContent.contains("/sql-tables:"), "YAML should contain generated path");
 
         assertTrue(Files.exists(intermediatePath), "SQL Intermediate file should exist");
         String intermediateContent = Files.readString(intermediatePath);

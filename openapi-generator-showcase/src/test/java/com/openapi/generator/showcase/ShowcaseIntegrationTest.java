@@ -93,7 +93,14 @@ public class ShowcaseIntegrationTest {
         assertTrue(yamlContent.contains("version: 1.0.1"), "La versión debe ser la configurada.");
         assertTrue(yamlContent.contains("/products:"), "Debe contener el endpoint de products.");
         assertTrue(yamlContent.contains("/orders:"), "Debe contener el endpoint de orders.");
-        assertTrue(yamlContent.contains("Modelo para PRODUCTS"), "Debe usar la plantilla personalizada.");
+        assertTrue(yamlContent.contains("/products/{id}:"), "Debe contener el endpoint de products por id.");
+        assertTrue(yamlContent.contains("/orders/{id}:"), "Debe contener el endpoint de orders por id.");
+        assertTrue(yamlContent.contains("OrderView:"), "Debe contener el schema OrderView.");
+        assertTrue(yamlContent.contains("OrderForm:"), "Debe contener el schema OrderForm.");
+        assertTrue(yamlContent.contains("ProductView:"), "Debe contener el schema ProductView.");
+        assertTrue(yamlContent.contains("ProductForm:"), "Debe contener el schema ProductForm.");
+        assertTrue(yamlContent.contains("Modelo de vista para PRODUCTS"), "Debe usar la plantilla de vista personalizada.");
+        assertTrue(yamlContent.contains("Modelo de formulario para PRODUCTS"), "Debe usar la plantilla de formulario personalizada.");
 
         String intermediateContent = Files.readString(intermediatePath);
         assertTrue(intermediateContent.contains("Generado desde parciales mergeados"), "El info debe indicar que fue mergeado.");

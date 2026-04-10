@@ -44,7 +44,8 @@ public class CrudGenerationTest {
         assertTrue(result.contains("get:"));
         assertTrue(result.contains("post:"));
         assertTrue(result.contains("/users/{id}:"));
-        assertTrue(result.contains("User:"));
+        assertTrue(result.contains("UserView:"));
+        assertTrue(result.contains("UserForm:"));
         assertTrue(result.contains("maxLength: 100"));
     }
 
@@ -74,7 +75,8 @@ public class CrudGenerationTest {
 
         assertTrue(result.contains("title: API desde YAML"));
         assertTrue(result.contains("/customers:"));
-        assertTrue(result.contains("Customer:"));
+        assertTrue(result.contains("CustomerView:"));
+        assertTrue(result.contains("CustomerForm:"));
     }
 
     @Test
@@ -101,6 +103,7 @@ public class CrudGenerationTest {
         assertTrue(Files.exists(outputPath), "OpenAPI file should exist");
         String content = Files.readString(outputPath);
         assertTrue(content.contains("title: API para Archivo"));
-        assertTrue(content.contains("Item:"));
+        assertTrue(content.contains("ItemView:"));
+        assertTrue(content.contains("ItemForm:"));
     }
 }
