@@ -9,13 +9,21 @@ import freemarker.template.TemplateExceptionHandler;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
 
 public class OpenApiGenerator {
 
     private final Configuration cfg;
+    private final Map<String, Object> additionalProperties;
 
     public OpenApiGenerator() {
+        this(new HashMap<>());
+    }
+
+    public OpenApiGenerator(Map<String, Object> additionalProperties) {
         this.cfg = new Configuration(Configuration.VERSION_2_3_32);
         this.cfg.setClassForTemplateLoading(OpenApiGenerator.class, "/templates");
         this.cfg.setDefaultEncoding("UTF-8");
@@ -26,20 +34,29 @@ public class OpenApiGenerator {
 
         // Permitir acceso directo a campos de Records en las plantillas
         this.cfg.setAPIBuiltinEnabled(true);
+        this.additionalProperties = additionalProperties != null ? additionalProperties : new HashMap<>();
     }
 
     /**
      * Genera la especificación OpenAPI y la devuelve como String.
      */
     public String generate(OpenApiSpec spec) throws IOException, TemplateException {
+        // Soporte para configurar el recurso externo de plantillas si se define en las propiedades
+        if (additionalProperties.containsKey("templates.path")) {
+            String path = (String) additionalProperties.get("templates.path");
+            Path templateDirPath = Path.of(path);
+            if (Files.exists(templateDirPath) && Files.isDirectory(templateDirPath)) {
+                cfg.setDirectoryForTemplateLoading(templateDirPath.toFile());
+            }
+        }
+
         Template temp = cfg.getTemplate("main.ftl");
         StringWriter out = new StringWriter();
         
-        // Pasamos los modelos directamente al contexto de la plantilla
-        Map<String, Object> root = Map.of(
-            "models", spec.models(),
-            "info", spec.info() != null ? spec.info() : "API Generada"
-        );
+        // Combinamos modelos con propiedades adicionales
+        Map<String, Object> root = new HashMap<>(additionalProperties);
+        root.put("models", spec.models());
+        root.put("info", spec.info() != null ? spec.info() : "API Generada");
         
         temp.process(root, out);
         return out.toString();

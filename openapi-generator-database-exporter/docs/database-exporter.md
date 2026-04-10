@@ -33,16 +33,47 @@ OpenApiSpec spec = sqlInspector.exportFromSql(ddl, List.of("CUSTOMERS"));
 ```
 
 ### Exportación Directa a Archivos
-`DatabaseExportFileWriter` combina la inspección y la generación de archivos:
+`DatabaseExportFileWriter` combina la inspección y la generación de archivos. Soporta configuración adicional para personalizar la salida OpenAPI (vía propiedades) y la ubicación de las plantillas:
 
 ```java
-DatabaseExportFileWriter writer = new DatabaseExportFileWriter();
+// Propiedades para la base de datos (Hibernate)
+Map<String, Object> dbSettings = Map.of(
+    "hibernate.connection.url", "jdbc:h2:mem:test",
+    "hibernate.connection.driver_class", "org.h2.Driver"
+);
 
-// Desde Base de Datos
+// Propiedades para la generación de OpenAPI y plantillas
+Map<String, Object> apiProps = Map.of(
+    "api.title", "Mi API Personalizada",
+    "templates.path", "/ruta/a/mis/plantillas"
+);
+
+DatabaseExportFileWriter writer = new DatabaseExportFileWriter(apiProps);
+writer.exportToYamlFile(dbSettings, List.of("USERS"), "api.yaml");
+```
+
+## Configuración Avanzada
+
+### Uso de Archivos .properties
+Puedes utilizar `FileUtils.loadProperties` para cargar configuraciones externas tanto para la base de datos como para el generador:
+
+```java
+Properties dbProps = FileUtils.loadProperties("database.properties");
+Map<String, Object> settings = (Map) dbProps;
+
+Properties apiProps = FileUtils.loadProperties("api.properties");
+Map<String, Object> additionalProps = (Map) apiProps;
+
+DatabaseExportFileWriter writer = new DatabaseExportFileWriter(additionalProps);
 writer.exportToYamlFile(settings, List.of("USERS"), "api.yaml");
+```
 
-// Desde SQL DDL
-writer.exportSqlToYamlFile(ddl, List.of("CUSTOMERS"), "api_from_sql.yaml");
+### Personalización de Plantillas
+Si se define la propiedad `templates.path`, el motor buscará `main.ftl` y sus fragmentos en esa ruta. En las plantillas, puedes acceder a las propiedades personalizadas usando `.vars`:
+
+```ftl
+info:
+  title: ${.vars['api.title']!'API por Defecto'}
 ```
 
 ## Dependencias

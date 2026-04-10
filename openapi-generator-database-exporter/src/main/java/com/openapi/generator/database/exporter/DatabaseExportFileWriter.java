@@ -20,10 +20,17 @@ public class DatabaseExportFileWriter {
     private final OpenApiGenerator generator;
 
     public DatabaseExportFileWriter() {
+        this(new java.util.HashMap<>());
+    }
+
+    /**
+     * Constructor que permite pasar propiedades adicionales para el generador OpenAPI.
+     */
+    public DatabaseExportFileWriter(Map<String, Object> additionalProperties) {
         this.inspector = new DatabaseInspector();
         this.sqlInspector = new SqlInspector();
         this.yamlSerializer = new YamlSerializer();
-        this.generator = new OpenApiGenerator();
+        this.generator = new OpenApiGenerator(additionalProperties);
     }
 
     /**
