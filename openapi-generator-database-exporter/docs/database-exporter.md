@@ -90,6 +90,19 @@ info:
   title: ${.vars['api.title']!'API por Defecto'}
 ```
 
+### CLI de Exportación (Showcase)
+En el módulo `openapi-generator-showcase`, se incluye una utilidad de línea de comandos (`CliExporterApp`) para realizar exportaciones rápidas:
+
+```bash
+# Exportar desde un archivo DDL SQL
+java CliExporterApp --sql schema.sql [directorio_salida]
+
+# Exportar desde una base de datos JDBC (pide credenciales interactivas)
+java CliExporterApp --jdbc jdbc_url [directorio_salida]
+```
+
+Esta utilidad genera exclusivamente los **parciales intermedios** (archivos `.txt` en `intermediate/partials`), facilitando la integración en flujos de CI/CD donde la generación de la especificación OpenAPI final se delega a un paso posterior de consolidación (merge).
+
 ## Dependencias
 
 *   `openapi-generator-core`: Para los modelos y el motor de generación.

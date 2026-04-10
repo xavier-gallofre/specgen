@@ -3,7 +3,6 @@ package com.openapi.generator.showcase;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -42,6 +41,30 @@ public class ShowcaseIntegrationTest {
 
         // Ahora verificar resultados completos
         verifyResults(splitDir);
+    }
+
+    @Test
+    public void testCliExporterSql() throws Exception {
+        Path cliDir = tempDir.resolve("cli-sql");
+        Files.createDirectories(cliDir);
+
+        // Crear un archivo SQL temporal
+        Path sqlFile = tempDir.resolve("test.sql");
+        String ddl = "CREATE TABLE USERS (ID INTEGER PRIMARY KEY, NAME VARCHAR(100)); " +
+                     "CREATE TABLE ROLES (ID INTEGER PRIMARY KEY, ROLE_NAME VARCHAR(50));";
+        Files.writeString(sqlFile, ddl);
+
+        // Ejecutar CliExporterApp en modo --sql
+        CliExporterApp.main(new String[]{"--sql", sqlFile.toString(), cliDir.toString()});
+
+        // Verificar que se crearon los parciales para USERS y ROLES
+        Path intermediatePartialsPath = cliDir.resolve("intermediate/partials");
+        Path openapiPartialsPath = cliDir.resolve("openapi/partials");
+
+        assertTrue(Files.exists(intermediatePartialsPath.resolve("USERS.txt")), "Debe existir el parcial intermedio de USERS.");
+        assertTrue(Files.exists(intermediatePartialsPath.resolve("ROLES.txt")), "Debe existir el parcial intermedio de ROLES.");
+        assertTrue(!Files.exists(openapiPartialsPath.resolve("USERS.yaml")), "El parcial OpenAPI de USERS NO debería existir.");
+        assertTrue(!Files.exists(openapiPartialsPath.resolve("ROLES.yaml")), "El parcial OpenAPI de ROLES NO debería existir.");
     }
 
     private void verifyResults(Path outputBaseDir) throws Exception {

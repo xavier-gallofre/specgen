@@ -65,6 +65,24 @@ public class DatabaseExportFileWriter {
     }
 
     /**
+     * Exporta las tablas y genera archivos parciales intermedios (formato interno) por cada tabla.
+     * Los parciales se guardan en la subcarpeta intermediate/partials del directorio base indicado.
+     */
+    public void exportToIntermediatePartialFiles(Map<String, Object> settings, List<String> tableNames, String baseOutputDir) throws IOException {
+        try {
+            OpenApiSpec spec = inspector.exportFromTables(settings, tableNames);
+            Path intermediatePartialsPath = Path.of(baseOutputDir).resolve("intermediate/partials");
+
+            for (ModelDefinition model : spec.models()) {
+                String modelYaml = yamlSerializer.serialize(model);
+                FileUtils.writeToFile(intermediatePartialsPath.resolve(model.name() + ".txt").toString(), modelYaml);
+            }
+        } catch (Exception e) {
+            throw new IOException("Error al generar archivos parciales intermedios", e);
+        }
+    }
+
+    /**
      * Combina los archivos parciales en archivos finales consolidados.
      * @param baseOutputDir Directorio base donde se encuentran las carpetas partials.
      * @param finalIntermediateName Nombre del archivo intermedio final (ej: "intermediate.txt").
