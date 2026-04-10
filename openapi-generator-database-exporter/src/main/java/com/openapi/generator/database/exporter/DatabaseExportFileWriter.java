@@ -15,13 +15,37 @@ import java.util.Map;
 public class DatabaseExportFileWriter {
 
     private final DatabaseInspector inspector;
+    private final SqlInspector sqlInspector;
     private final YamlSerializer yamlSerializer;
     private final OpenApiGenerator generator;
 
     public DatabaseExportFileWriter() {
         this.inspector = new DatabaseInspector();
+        this.sqlInspector = new SqlInspector();
         this.yamlSerializer = new YamlSerializer();
         this.generator = new OpenApiGenerator();
+    }
+
+    /**
+     * Exporta las tablas desde un DDL SQL y genera la especificación OpenAPI final en un fichero YAML.
+     */
+    public void exportSqlToYamlFile(String ddl, List<String> tableNames, String outputPath) throws IOException {
+        try {
+            OpenApiSpec spec = sqlInspector.exportFromSql(ddl, tableNames);
+            String openApiContent = generator.generate(spec);
+            FileUtils.writeToFile(outputPath, openApiContent);
+        } catch (Exception e) {
+            throw new IOException("Error al generar la especificación OpenAPI desde SQL", e);
+        }
+    }
+
+    /**
+     * Exporta las tablas desde un DDL SQL y guarda el formato intermedio en un fichero.
+     */
+    public void exportSqlToIntermediateFile(String ddl, List<String> tableNames, String outputPath) throws IOException {
+        OpenApiSpec spec = sqlInspector.exportFromSql(ddl, tableNames);
+        String intermediateContent = yamlSerializer.serialize(spec);
+        FileUtils.writeToFile(outputPath, intermediateContent);
     }
 
     /**

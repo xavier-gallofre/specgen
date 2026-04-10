@@ -53,4 +53,25 @@ public class DatabaseExportFileWriterTest {
             assertTrue(intermediateContent.contains("models:"), "Intermediate file should contain models key");
         }
     }
+
+    @Test
+    public void testExportSqlToFile() throws IOException, Exception {
+        String ddl = "CREATE TABLE SQL_TABLE (ID NUMBER(10) PRIMARY KEY, CONTENT CLOB)";
+        DatabaseExportFileWriter writer = new DatabaseExportFileWriter();
+
+        Path yamlPath = tempDir.resolve("sql_output.yaml");
+        Path intermediatePath = tempDir.resolve("sql_intermediate.txt");
+
+        writer.exportSqlToYamlFile(ddl, List.of("SQL_TABLE"), yamlPath.toString());
+        writer.exportSqlToIntermediateFile(ddl, List.of("SQL_TABLE"), intermediatePath.toString());
+
+        assertTrue(Files.exists(yamlPath), "SQL YAML file should exist");
+        String yamlContent = Files.readString(yamlPath);
+        assertTrue(yamlContent.contains("openapi: 3.0.3"), "YAML should be a valid OpenAPI spec");
+        assertTrue(yamlContent.contains("/sql_tables:"), "YAML should contain generated path");
+
+        assertTrue(Files.exists(intermediatePath), "SQL Intermediate file should exist");
+        String intermediateContent = Files.readString(intermediatePath);
+        assertTrue(intermediateContent.contains("name: SQL_TABLE"), "Intermediate file should contain table name");
+    }
 }

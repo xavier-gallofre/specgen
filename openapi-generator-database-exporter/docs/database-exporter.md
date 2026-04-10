@@ -4,21 +4,45 @@ Este módulo se encarga de inspeccionar una base de datos relacional y generar e
 
 ## Características
 
-*   **Inspección JDBC**: Utiliza metadatos de JDBC para leer tablas, columnas, tipos de datos, restricciones de nulidad y longitudes.
+*   **Inspección Hibernate/JDBC**: Utiliza metadatos de JDBC a través de Hibernate para una extracción de metadatos robusta y multi-base de datos.
+*   **Inspección SQL DDL**: Capacidad de generar modelos a partir de scripts SQL (`CREATE TABLE`) sin necesidad de una base de datos real.
 *   **Mapeo de Tipos**: Traduce tipos SQL estándar (VARCHAR, INTEGER, etc.) a tipos compatibles con OpenAPI (string, integer, number, boolean).
-*   **Integración con Core**: Produce objetos `OpenApiSpec` listos para ser procesados por `OpenApiGenerator`.
+*   **Exportación a Archivos**: Herramientas auxiliares para volcar resultados (YAML final e intermedio) directamente al sistema de archivos.
 
 ## Uso
 
-El componente principal es `DatabaseInspector`. Puedes pasarle una conexión JDBC y una lista de tablas para exportar:
+### Inspección de Base de Datos Real
+El componente principal es `DatabaseInspector`. Utiliza Hibernate para conectarse a cualquier base de datos configurada:
 
 ```java
 DatabaseInspector inspector = new DatabaseInspector();
-OpenApiSpec spec = inspector.exportFromTables(connection, List.of("USERS", "PRODUCTS"));
+Map<String, Object> settings = Map.of(
+    "hibernate.connection.url", "jdbc:h2:mem:test",
+    "hibernate.connection.driver_class", "org.h2.Driver"
+);
+OpenApiSpec spec = inspector.exportFromTables(settings, List.of("USERS"));
+```
 
-// La generación de la especificación queda a cargo del módulo Core:
-// OpenApiGenerator generator = new OpenApiGenerator();
-// String yaml = generator.generate(spec);
+### Inspección desde SQL DDL
+Para generar la especificación sin conectarse a una base de datos externa, usa `SqlInspector`. Internamente procesa el DDL en una instancia de H2 efímera:
+
+```java
+SqlInspector sqlInspector = new SqlInspector();
+String ddl = "CREATE TABLE CUSTOMERS (ID NUMBER(10) PRIMARY KEY, NAME VARCHAR2(50))";
+OpenApiSpec spec = sqlInspector.exportFromSql(ddl, List.of("CUSTOMERS"));
+```
+
+### Exportación Directa a Archivos
+`DatabaseExportFileWriter` combina la inspección y la generación de archivos:
+
+```java
+DatabaseExportFileWriter writer = new DatabaseExportFileWriter();
+
+// Desde Base de Datos
+writer.exportToYamlFile(settings, List.of("USERS"), "api.yaml");
+
+// Desde SQL DDL
+writer.exportSqlToYamlFile(ddl, List.of("CUSTOMERS"), "api_from_sql.yaml");
 ```
 
 ## Dependencias
