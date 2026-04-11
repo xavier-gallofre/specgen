@@ -81,6 +81,12 @@ public class ShowcaseIntegrationTest {
         assertTrue(Files.exists(openapiPartialsPath.resolve("PRODUCTS.yaml")), "Debe existir el parcial OpenAPI de PRODUCTS.");
         assertTrue(Files.exists(openapiPartialsPath.resolve("ORDERS.yaml")), "Debe existir el parcial OpenAPI de ORDERS.");
 
+        // Verificar nuevos fragmentos
+        assertTrue(Files.exists(openapiPartialsPath.resolve("PRODUCTS_paths.yaml")), "Debe existir el fragmento de paths de PRODUCTS.");
+        assertTrue(Files.exists(openapiPartialsPath.resolve("PRODUCTS_schemas.yaml")), "Debe existir el fragmento de schemas de PRODUCTS.");
+        assertTrue(Files.exists(openapiPartialsPath.resolve("ORDERS_paths.yaml")), "Debe existir el fragmento de paths de ORDERS.");
+        assertTrue(Files.exists(openapiPartialsPath.resolve("ORDERS_schemas.yaml")), "Debe existir el fragmento de schemas de ORDERS.");
+
         // 3. Verificar archivos finales consolidados (mergeados)
         Path yamlPath = outputBaseDir.resolve("openapi/showcase-openapi.yaml");
         Path intermediatePath = outputBaseDir.resolve("intermediate/showcase-intermediate.txt");

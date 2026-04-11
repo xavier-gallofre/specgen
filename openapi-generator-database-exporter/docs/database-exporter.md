@@ -55,11 +55,19 @@ writer.exportToYamlFile(dbSettings, List.of("USERS"), "api.yaml");
 ### Exportación por Parciales y Consolidación (Merge)
 Es posible generar archivos individuales por cada tabla (parciales) y luego combinarlos en archivos finales. Esto es útil para flujos de trabajo donde se revisan los cambios tabla por tabla.
 
+Cuando se generan parciales OpenAPI, `DatabaseExportFileWriter` genera tres tipos de archivos en `openapi/partials/`:
+*   `TABLE.yaml`: El parcial completo de la tabla (incluye `paths` y `components/schemas`).
+*   `TABLE_paths.yaml`: Solo los fragmentos de rutas (`paths`) asociados a la tabla.
+*   `TABLE_schemas.yaml`: Solo los fragmentos de esquemas (`components/schemas`) asociados a la tabla.
+
+Esto permite una mayor granularidad al trabajar con parciales de la especificación.
+
 ```java
 DatabaseExportFileWriter writer = new DatabaseExportFileWriter(apiProps);
 String outputDir = "generated";
 
 // Genera parciales en generated/openapi/partials y generated/intermediate/partials
+// Incluyendo los nuevos fragmentos _paths.yaml y _schemas.yaml
 writer.exportToPartialFiles(dbSettings, List.of("USERS", "PRODUCTS"), outputDir);
 
 // Combina los parciales en archivos finales

@@ -42,9 +42,9 @@ public class OpenApiGenerator {
     }
 
     /**
-     * Genera la especificación OpenAPI para un solo modelo (parcial).
+     * Genera un fragmento de la especificación OpenAPI usando una plantilla específica.
      */
-    public String generatePartial(OpenApiSpec spec, String modelName) throws IOException, TemplateException {
+    public String generateFragment(OpenApiSpec spec, String modelName, String templateName) throws IOException, TemplateException {
         // Soporte para configurar el recurso externo de plantillas si se define en las propiedades
         if (additionalProperties.containsKey("templates.path")) {
             String path = (String) additionalProperties.get("templates.path");
@@ -59,14 +59,23 @@ public class OpenApiGenerator {
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Modelo no encontrado: " + modelName));
 
-        Template temp = cfg.getTemplate("partial.ftl");
+        Template temp = cfg.getTemplate(templateName);
         StringWriter out = new StringWriter();
 
         Map<String, Object> root = new HashMap<>(additionalProperties);
         root.put("model", model);
+        // Algunos templates (como schemas.ftl) pueden esperar "models" (lista)
+        root.put("models", java.util.List.of(model));
 
         temp.process(root, out);
         return out.toString();
+    }
+
+    /**
+     * Genera la especificación OpenAPI para un solo modelo (parcial).
+     */
+    public String generatePartial(OpenApiSpec spec, String modelName) throws IOException, TemplateException {
+        return generateFragment(spec, modelName, "partial.ftl");
     }
 
     /**

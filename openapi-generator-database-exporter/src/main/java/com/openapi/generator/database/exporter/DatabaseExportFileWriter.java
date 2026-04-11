@@ -55,8 +55,17 @@ public class DatabaseExportFileWriter {
                 String modelYaml = yamlSerializer.serialize(model);
                 FileUtils.writeToFile(intermediatePartialsPath.resolve(model.name() + ".txt").toString(), modelYaml);
 
-                // 2. Parcial OpenAPI (YAML parcial generado por template)
-                String partialOpenApi = generator.generatePartial(spec, model.name());
+                // 2. Parciales OpenAPI Fragmentados
+                // a. Fragmento de Paths
+                String pathsFragment = generator.generateFragment(spec, model.name(), "paths_crud.ftl");
+                FileUtils.writeToFile(openapiPartialsPath.resolve(model.name() + "_paths.yaml").toString(), pathsFragment);
+
+                // b. Fragmento de Schemas
+                String schemasFragment = generator.generateFragment(spec, model.name(), "schemas.ftl");
+                FileUtils.writeToFile(openapiPartialsPath.resolve(model.name() + "_schemas.yaml").toString(), schemasFragment);
+
+                // 3. Parcial OpenAPI Combinado (Mantiene compatibilidad con el formato esperado por otros procesos)
+                String partialOpenApi = "paths:\n" + pathsFragment + "\ncomponents:\n" + schemasFragment;
                 FileUtils.writeToFile(openapiPartialsPath.resolve(model.name() + ".yaml").toString(), partialOpenApi);
             }
         } catch (Exception e) {
