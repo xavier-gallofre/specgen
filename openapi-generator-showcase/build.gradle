@@ -1,8 +1,8 @@
 dependencies {
     implementation project(':openapi-generator-core')
     implementation project(':openapi-generator-database-exporter')
+    implementation project(':openapi-generator-spring-server')
 
-    // Drivers JDBC necesarios para el showcase
     implementation 'com.h2database:h2:2.2.224'
     implementation 'com.oracle.database.jdbc:ojdbc11:23.3.0.23.09'
 

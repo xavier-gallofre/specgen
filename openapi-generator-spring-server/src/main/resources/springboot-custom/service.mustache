@@ -1,0 +1,34 @@
+package {{modelPackage}};
+
+import org.springframework.stereotype.Service;
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * Service for {{classname}}
+ */
+@Service
+public class {{classname}}Service {
+
+    private final {{classname}}Repository repository;
+
+    public {{classname}}Service({{classname}}Repository repository) {
+        this.repository = repository;
+    }
+
+    public List<{{classname}}> findAll() {
+        return repository.findAll();
+    }
+
+    public Optional<{{classname}}> findById(Long id) {
+        return repository.findById(id);
+    }
+
+    public {{classname}} save({{classname}} entity) {
+        return repository.save(entity);
+    }
+
+    public void deleteById(Long id) {
+        repository.deleteById(id);
+    }
+}

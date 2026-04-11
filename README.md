@@ -6,6 +6,7 @@ Proyecto base para la generación de especificaciones OpenAPI mediante un pseudo
 
 *   **`openapi-generator-core`**: El motor principal (Librería). Contiene la lógica de transformación y plantillas FreeMarker.
 *   **`openapi-generator-database-exporter`**: Módulo para inspeccionar bases de datos y generar el pseudo-formato a partir de tablas existentes.
+*   **`openapi-generator-spring-server`**: Generador personalizado de OpenAPI (basado en el framework oficial `openapi-generator-cli`) que extiende el generador de Spring para producir servidores personalizados.
 *   *Próximos proyectos*: CLI (Micronaut), etc.
 
 ## Objetivo

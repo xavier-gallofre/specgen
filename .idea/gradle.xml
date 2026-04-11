@@ -12,6 +12,7 @@
             <option value="$PROJECT_DIR$/openapi-generator-core" />
             <option value="$PROJECT_DIR$/openapi-generator-database-exporter" />
             <option value="$PROJECT_DIR$/openapi-generator-showcase" />
+            <option value="$PROJECT_DIR$/openapi-generator-spring-server" />
           </set>
         </option>
       </GradleProjectSettings>

@@ -1,0 +1,27 @@
+package {{package}};
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import {{modelPackage}}.*;
+import java.util.List;
+
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.SpringBootCustomGenerator")
+@RestController
+@RequestMapping("{{contextPath}}")
+public class {{classname}} {
+
+{{#operations}}
+{{#operation}}
+    /**
+     * {{summary}}
+     */
+    @RequestMapping(
+        method = RequestMethod.{{httpMethod}},
+        value = "{{{path}}}"
+    )
+    public ResponseEntity<{{returnType}}{{^returnType}}Void{{/returnType}}> {{operationId}}({{#allParams}}{{datatype}} {{paramName}}{{#hasMore}}, {{/hasMore}}{{/allParams}}) {
+        return ResponseEntity.ok().build();
+    }
+{{/operation}}
+{{/operations}}
+}

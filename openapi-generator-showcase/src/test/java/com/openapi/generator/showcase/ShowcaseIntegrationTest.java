@@ -14,6 +14,49 @@ public class ShowcaseIntegrationTest {
     Path tempDir;
 
     @Test
+    public void testCustomSpringServerGeneration() throws Exception {
+        // 1. Generar el OpenAPI primero usando ShowcaseApp
+        String outputDir = tempDir.resolve("showcase").toString();
+        ShowcaseApp.main(new String[]{outputDir});
+
+        Path openapiPath = tempDir.resolve("showcase/openapi/showcase-openapi.yaml");
+        assertTrue(Files.exists(openapiPath), "El archivo OpenAPI debería existir antes de generar el servidor");
+
+        // 2. Ejecutar el generador personalizado
+        String springOutputDir = tempDir.resolve("spring-server").toString();
+        CustomSpringServerApp.main(new String[]{openapiPath.toString(), springOutputDir});
+
+        // 3. Verificar que se han generado archivos (ej: modelos y apis)
+        // Por defecto el generador de Java usa src/main/java
+        Path apiFile = tempDir.resolve("spring-server/src/main/java/com/example/api/DefaultApi.java");
+        Path modelFile = tempDir.resolve("spring-server/src/main/java/com/example/model/ProductView.java");
+
+        assertTrue(Files.exists(apiFile), "DefaultApi.java debería haberse generado");
+        assertTrue(Files.exists(modelFile), "ProductView.java debería haberse generado");
+
+        String apiContent = Files.readString(apiFile);
+        assertTrue(apiContent.contains("@RestController"), "Debería contener la anotación @RestController de nuestra plantilla");
+        assertTrue(apiContent.contains("SpringBootCustomGenerator"), "Debería mencionar nuestro generador en @Generated");
+
+        // 4. Verificar nuevos archivos (Repository y Service por cada modelo)
+        // Como se generan por modelo (ProductView, ProductForm, etc.)
+        Path productViewRepo = tempDir.resolve("spring-server/src/main/java/com/example/model/ProductViewRepository.java");
+        Path productViewService = tempDir.resolve("spring-server/src/main/java/com/example/model/ProductViewService.java");
+
+        assertTrue(Files.exists(productViewRepo), "ProductViewRepository.java debería haberse generado");
+        assertTrue(Files.exists(productViewService), "ProductViewService.java debería haberse generado");
+
+        String serviceContent = Files.readString(productViewService);
+        assertTrue(serviceContent.contains("@Service"), "El servicio debería tener la anotación @Service");
+        assertTrue(serviceContent.contains("ProductViewRepository repository"), "El servicio debería inyectar el repositorio");
+
+        String modelContent = Files.readString(modelFile);
+        System.out.println("[DEBUG_LOG] Model Content:\n" + modelContent);
+        assertTrue(modelContent.contains("@Entity"), "El modelo debería ser una entidad JPA");
+        assertTrue(modelContent.contains("@Id"), "El modelo debería tener una clave primaria");
+    }
+
+    @Test
     public void runShowcase() throws Exception {
         // Ejecutar la aplicación principal pasando la carpeta temporal
         ShowcaseApp.main(new String[]{tempDir.toString()});
