@@ -4,10 +4,17 @@ dependencies {
 
     // Drivers JDBC necesarios para el showcase
     implementation 'com.h2database:h2:2.2.224'
+    implementation 'com.oracle.database.jdbc:ojdbc11:23.3.0.23.09'
 
     // JUnit para el test que actúe como ejecutable
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // Testcontainers para Oracle
+    testImplementation 'org.testcontainers:testcontainers:1.19.3'
+    testImplementation 'org.testcontainers:junit-jupiter:1.19.3'
+    testImplementation 'org.testcontainers:oracle-xe:1.19.3'
+    testImplementation 'ch.qos.logback:logback-classic:1.4.11'
 }
 
 tasks.test {

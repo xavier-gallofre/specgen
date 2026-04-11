@@ -83,6 +83,7 @@ public class CliExporterApp {
         
         String user;
         char[] password;
+        Scanner scanner = new Scanner(System.in);
 
         Console console = System.console();
         if (console != null) {
@@ -90,7 +91,6 @@ public class CliExporterApp {
             password = console.readPassword("Contraseña: ");
         } else {
             // Fallback para entornos sin consola interactiva (como IDEs)
-            Scanner scanner = new Scanner(System.in);
             System.out.print("Usuario de base de datos: ");
             user = scanner.nextLine();
             System.out.print("Contraseña: ");
@@ -103,7 +103,6 @@ public class CliExporterApp {
         // En un entorno real, pediríamos también las tablas, pero para el showcase
         // usaremos las del init.sql o dejaremos que el usuario las introduzca
         System.out.print("Introduce los nombres de las tablas a exportar (separados por coma): ");
-        Scanner scanner = new Scanner(System.in);
         String tablesInput = scanner.nextLine();
         List<String> tableNames = List.of(tablesInput.split(",")).stream()
                 .map(String::trim)
