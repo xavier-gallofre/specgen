@@ -25,4 +25,8 @@ Para ejecutar todos los tests desde la raíz:
 ./gradlew test
 ```
 
+## Flujo de Trabajo
+
+Para comprender detalladamente cómo se generan las especificaciones paso a paso (parciales, intermedios y ensamblado final), consulta el documento de [Flujo de Generación de OpenAPI](README-WORKFLOW.md).
+
 Para más detalles sobre la estructura interna del core, consulta [Architecture](openapi-generator-core/docs/architecture.md).
