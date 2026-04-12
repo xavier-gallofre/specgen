@@ -1,4 +1,4 @@
-package {{modelPackage}};
+package {{#modelPackage}}{{modelPackage}}{{/modelPackage}}{{^modelPackage}}{{vendorExtensions.modelPackage}}{{/modelPackage}};
 
 import jakarta.persistence.*;
 
@@ -7,23 +7,27 @@ import jakarta.persistence.*;
  * {{description}}
  */
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.SpringBootCustomGenerator")
+{{#vendorExtensions.x-is-entity}}
 @Entity
-@Table(name = "{{{name}}}")
+@Table(name = "{{{vendorExtensions.x-entity-name}}}")
+{{/vendorExtensions.x-is-entity}}
 public class {{classname}} {
   {{#vars}}
+  {{#vendorExtensions.x-is-entity}}
   {{#vendorExtensions.x-is-id}}
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   {{/vendorExtensions.x-is-id}}
   @Column(name = "{{{baseName}}}")
+  {{/vendorExtensions.x-is-entity}}
   private {{datatype}} {{name}};
   {{/vars}}
 
   {{#vars}}
-  public {{datatype}} get{{nameInPascalCase}}() {
+  public {{datatype}} get{{#lambda.capitalize}}{{name}}{{/lambda.capitalize}}() {
     return {{name}};
   }
-  public void set{{nameInPascalCase}}({{datatype}} {{name}}) {
+  public void set{{#lambda.capitalize}}{{name}}{{/lambda.capitalize}}({{datatype}} {{name}}) {
     this.{{name}} = {{name}};
   }
   {{/vars}}

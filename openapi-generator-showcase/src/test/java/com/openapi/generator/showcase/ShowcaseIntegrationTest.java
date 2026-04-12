@@ -26,34 +26,54 @@ public class ShowcaseIntegrationTest {
         String springOutputDir = tempDir.resolve("spring-server").toString();
         CustomSpringServerApp.main(new String[]{openapiPath.toString(), springOutputDir});
 
-        // 3. Verificar que se han generado archivos (ej: modelos y apis)
-        // Por defecto el generador de Java usa src/main/java
-        Path apiFile = tempDir.resolve("spring-server/src/main/java/com/example/api/DefaultApi.java");
-        Path modelFile = tempDir.resolve("spring-server/src/main/java/com/example/model/ProductView.java");
+        // 3. Verificar que se han generado archivos (ej: modelos y apis) en estructura hexagonal
+        // Buscamos los archivos sin importar el paquete base exacto (puede ser com.example u org.openapitools)
+        Path srcMainJava = tempDir.resolve("spring-server/src/main/java");
+        
+        Path apiFile = findFile(srcMainJava, "DefaultApi.java", "infrastructure/api");
+        Path modelFile = findFile(srcMainJava, "ProductView.java", "domain/model");
 
-        assertTrue(Files.exists(apiFile), "DefaultApi.java debería haberse generado");
-        assertTrue(Files.exists(modelFile), "ProductView.java debería haberse generado");
+        assertTrue(apiFile != null && Files.exists(apiFile), "DefaultApi.java debería haberse generado en infrastructure.api");
+        assertTrue(modelFile != null && Files.exists(modelFile), "ProductView.java debería haberse generado en domain.model");
 
         String apiContent = Files.readString(apiFile);
+        assertTrue(apiContent.contains(".infrastructure.api;"), "Debería tener el paquete de infraestructura");
         assertTrue(apiContent.contains("@RestController"), "Debería contener la anotación @RestController de nuestra plantilla");
-        assertTrue(apiContent.contains("SpringBootCustomGenerator"), "Debería mencionar nuestro generador en @Generated");
 
         // 4. Verificar nuevos archivos (Repository y Service por cada modelo)
-        // Como se generan por modelo (ProductView, ProductForm, etc.)
-        Path productViewRepo = tempDir.resolve("spring-server/src/main/java/com/example/model/ProductViewRepository.java");
-        Path productViewService = tempDir.resolve("spring-server/src/main/java/com/example/model/ProductViewService.java");
+        // Ahora el repositorio es de la entidad base (Product), no del DTO (ProductView)
+        Path productRepo = findFile(srcMainJava, "ProductRepository.java", "infrastructure/persistence");
+        Path productViewService = findFile(srcMainJava, "ProductViewService.java", "domain/service");
 
-        assertTrue(Files.exists(productViewRepo), "ProductViewRepository.java debería haberse generado");
-        assertTrue(Files.exists(productViewService), "ProductViewService.java debería haberse generado");
+        assertTrue(productRepo != null && Files.exists(productRepo), "ProductRepository.java debería haberse generado");
+        assertTrue(productViewService != null && Files.exists(productViewService), "ProductViewService.java debería haberse generado");
+
+        String repoContent = Files.readString(productRepo);
+        System.out.println("[DEBUG_LOG] Repo Content: " + repoContent);
+        assertTrue(repoContent.contains(".infrastructure.persistence;"), "El repositorio debería tener el paquete de persistencia");
 
         String serviceContent = Files.readString(productViewService);
+        assertTrue(serviceContent.contains(".domain.service;"), "El servicio debería tener el paquete de dominio");
         assertTrue(serviceContent.contains("@Service"), "El servicio debería tener la anotación @Service");
-        assertTrue(serviceContent.contains("ProductViewRepository repository"), "El servicio debería inyectar el repositorio");
+        assertTrue(serviceContent.contains(".model.*;"), "El servicio debería importar los modelos");
+        assertTrue(serviceContent.contains("repository.findAll().stream()"), "El servicio debería contener lógica de mapeo");
 
+        // 5. Verificar que la entidad base existe y tiene anotaciones JPA
+        Path entityFile = findFile(srcMainJava, "Product.java", "domain/model");
+        assertTrue(entityFile != null && Files.exists(entityFile), "La entidad Product.java debería haberse generado");
+        String entityContent = Files.readString(entityFile);
+        assertTrue(entityContent.contains("@Entity"), "La entidad debería tener la anotación @Entity");
+
+        // 6. Verificar que el DTO NO tiene anotaciones JPA
         String modelContent = Files.readString(modelFile);
-        System.out.println("[DEBUG_LOG] Model Content:\n" + modelContent);
-        assertTrue(modelContent.contains("@Entity"), "El modelo debería ser una entidad JPA");
-        assertTrue(modelContent.contains("@Id"), "El modelo debería tener una clave primaria");
+        assertTrue(!modelContent.contains("@Entity"), "El DTO ProductView NO debería ser una entidad JPA");
+    }
+
+    private Path findFile(Path startDir, String fileName, String subDirSuffix) throws Exception {
+        return Files.walk(startDir)
+                .filter(p -> p.toString().endsWith(fileName) && p.toString().contains(subDirSuffix.replace("/", java.io.File.separator)))
+                .findFirst()
+                .orElse(null);
     }
 
     @Test

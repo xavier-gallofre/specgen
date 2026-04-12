@@ -1,8 +1,11 @@
-package {{modelPackage}};
+package com.example.domain.service;
 
 import org.springframework.stereotype.Service;
+import com.example.model.*;
+import com.example.infrastructure.persistence.*;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Service for {{classname}}
@@ -10,25 +13,52 @@ import java.util.Optional;
 @Service
 public class {{classname}}Service {
 
-    private final {{classname}}Repository repository;
+    private final {{vendorExtensions.x-entity-name}}Repository repository;
 
-    public {{classname}}Service({{classname}}Repository repository) {
+    public {{classname}}Service({{vendorExtensions.x-entity-name}}Repository repository) {
         this.repository = repository;
     }
 
     public List<{{classname}}> findAll() {
-        return repository.findAll();
+        return repository.findAll().stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
-    public Optional<{{classname}}> findById(Long id) {
-        return repository.findById(id);
+    public Optional<{{classname}}> findById(Object id) {
+        // En un entorno real, el tipo de ID debería ser consistente.
+        // Aquí usamos Object por simplicidad en la generación.
+        if (id instanceof Long) {
+            return repository.findById((Long)id).map(this::toDto);
+        }
+        return Optional.empty();
     }
 
-    public {{classname}} save({{classname}} entity) {
-        return repository.save(entity);
+    public {{classname}} save({{classname}} dto) {
+        {{vendorExtensions.x-entity-name}} entity = toEntity(dto);
+        return toDto(repository.save(entity));
     }
 
-    public void deleteById(Long id) {
-        repository.deleteById(id);
+    public void deleteById(Object id) {
+        if (id instanceof Long) {
+            repository.deleteById((Long)id);
+        }
+    }
+
+    private {{classname}} toDto({{vendorExtensions.x-entity-name}} entity) {
+        {{classname}} dto = new {{classname}}();
+        // Mapeo manual simple por ahora. Idealmente usar MapStruct.
+        {{#vars}}
+        dto.set{{nameInPascalCase}}(entity.get{{nameInPascalCase}}());
+        {{/vars}}
+        return dto;
+    }
+
+    private {{vendorExtensions.x-entity-name}} toEntity({{classname}} dto) {
+        {{vendorExtensions.x-entity-name}} entity = new {{vendorExtensions.x-entity-name}}();
+        {{#vars}}
+        entity.set{{nameInPascalCase}}(dto.get{{nameInPascalCase}}());
+        {{/vars}}
+        return entity;
     }
 }

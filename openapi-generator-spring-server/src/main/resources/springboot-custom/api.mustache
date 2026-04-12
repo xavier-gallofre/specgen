@@ -1,8 +1,9 @@
-package {{package}};
+package {{apiPackage}};
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import {{modelPackage}}.*;
+import {{#modelPackage}}{{modelPackage}}{{/modelPackage}}{{^modelPackage}}{{vendorExtensions.modelPackage}}{{/modelPackage}}.*;
+import {{servicePackage}}.*;
 import java.util.List;
 
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.SpringBootCustomGenerator")
@@ -10,17 +11,53 @@ import java.util.List;
 @RequestMapping("{{contextPath}}")
 public class {{classname}} {
 
+    private final {{classname}}Service service;
+
+    public {{classname}} ({{classname}}Service service) {
+        this.service = service;
+    }
+
 {{#operations}}
 {{#operation}}
     /**
      * {{summary}}
      */
     @RequestMapping(
-        method = RequestMethod.{{httpMethod}},
+        method = org.springframework.web.bind.annotation.RequestMethod.{{httpMethod}},
         value = "{{{path}}}"
     )
-    public ResponseEntity<{{returnType}}{{^returnType}}Void{{/returnType}}> {{operationId}}({{#allParams}}{{datatype}} {{paramName}}{{#hasMore}}, {{/hasMore}}{{/allParams}}) {
-        return ResponseEntity.ok().build();
+    public org.springframework.http.ResponseEntity<{{returnType}}{{^returnType}}Void{{/returnType}}> {{operationId}}({{#allParams}}{{datatype}} {{paramName}}{{#hasMore}}, {{/hasMore}}{{/allParams}}) {
+        {{#returnType}}
+        {{#isListContainer}}
+        java.util.List<{{returnBaseType}}> result = service.findAll();
+        return org.springframework.http.ResponseEntity.ok(result);
+        {{/isListContainer}}
+        {{^isListContainer}}
+        {{#isResponseBinary}}
+        return org.springframework.http.ResponseEntity.ok().build();
+        {{/isResponseBinary}}
+        {{^isResponseBinary}}
+        return service.findById({{#allParams}}{{#isPathParam}}{{paramName}}{{/isPathParam}}{{/allParams}}).map(org.springframework.http.ResponseEntity::ok).orElse(org.springframework.http.ResponseEntity.notFound().build());
+        {{/isResponseBinary}}
+        {{/isListContainer}}
+        {{/returnType}}
+        {{^returnType}}
+        {{#isPost}}
+        service.save({{bodyParam.paramName}});
+        return org.springframework.http.ResponseEntity.status(201).build();
+        {{/isPost}}
+        {{#isPut}}
+        service.save({{bodyParam.paramName}});
+        return org.springframework.http.ResponseEntity.noContent().build();
+        {{/isPut}}
+        {{#isDelete}}
+        service.deleteById({{#allParams}}{{#isPathParam}}{{paramName}}{{/isPathParam}}{{/allParams}});
+        return org.springframework.http.ResponseEntity.noContent().build();
+        {{/isDelete}}
+        {{^isPost}}{{^isPut}}{{^isDelete}}
+        return org.springframework.http.ResponseEntity.ok().build();
+        {{/isDelete}}{{/isPut}}{{/isPost}}
+        {{/returnType}}
     }
 {{/operation}}
 {{/operations}}
