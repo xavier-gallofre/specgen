@@ -1,0 +1,26 @@
+dependencies {
+    implementation project(':specgen-core')
+    
+    // Hibernate / JPA para inspección de DB
+    implementation 'org.hibernate.orm:hibernate-core:6.4.4.Final'
+    
+    // JDBC drivers
+    implementation 'com.h2database:h2:2.2.224'
+    implementation 'com.oracle.database.jdbc:ojdbc11:23.3.0.23.09'
+
+    // JUnit 5 para pruebas
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // Testcontainers
+    testImplementation 'org.testcontainers:testcontainers:1.19.3'
+    testImplementation 'org.testcontainers:junit-jupiter:1.19.3'
+    testImplementation 'org.testcontainers:oracle-xe:1.19.3'
+    
+    // Logger para depurar Testcontainers
+    testImplementation 'ch.qos.logback:logback-classic:1.4.11'
+}
+
+tasks.test {
+    useJUnitPlatform()
+}

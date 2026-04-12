@@ -4,9 +4,9 @@ Proyecto base para la generación de especificaciones OpenAPI mediante un pseudo
 
 ## Estructura del Proyecto
 
-*   **`openapi-generator-core`**: El motor principal (Librería). Contiene la lógica de transformación y plantillas FreeMarker.
-*   **`openapi-generator-database-exporter`**: Módulo para inspeccionar bases de datos y generar el pseudo-formato a partir de tablas existentes.
-*   **`openapi-generator-spring-server`**: Generador personalizado de OpenAPI (basado en el framework oficial `openapi-generator-cli`) que extiende el generador de Spring para producir servidores personalizados.
+*   **`specgen-core`**: El motor principal (Librería). Contiene la lógica de transformación y plantillas FreeMarker.
+*   **`specgen-database-exporter`**: Módulo para inspeccionar bases de datos y generar el pseudo-formato a partir de tablas existentes.
+*   **`specgen-spring-server`**: Generador personalizado de OpenAPI (basado en el framework oficial `specgen-cli`) que extiende el generador de Spring para producir servidores personalizados.
 *   *Próximos proyectos*: CLI (Micronaut), etc.
 
 ## Objetivo
@@ -30,4 +30,4 @@ Para ejecutar todos los tests desde la raíz:
 
 Para comprender detalladamente cómo se generan las especificaciones paso a paso (parciales, intermedios y ensamblado final), consulta el documento de [Flujo de Generación de OpenAPI](README-WORKFLOW.md).
 
-Para más detalles sobre la estructura interna del core, consulta [Architecture](openapi-generator-core/docs/architecture.md).
+Para más detalles sobre la estructura interna del core, consulta [Architecture](specgen-core/docs/architecture.md).

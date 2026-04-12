@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CompilerConfiguration">
-    <bytecodeTargetLevel target="25" />
+    <bytecodeTargetLevel target="25">
+      <module name="openapi-generator.openapi-generator-core" target="26" />
+      <module name="openapi-generator.openapi-generator-core.main" target="26" />
+      <module name="openapi-generator.openapi-generator-core.test" target="26" />
+      <module name="openapi-generator.openapi-generator-database-exporter" target="26" />
+      <module name="openapi-generator.openapi-generator-database-exporter.main" target="26" />
+      <module name="openapi-generator.openapi-generator-database-exporter.test" target="26" />
+      <module name="openapi-generator.openapi-generator-showcase" target="26" />
+      <module name="openapi-generator.openapi-generator-showcase.main" target="26" />
+      <module name="openapi-generator.openapi-generator-showcase.test" target="26" />
+      <module name="openapi-generator.openapi-generator-spring-server" target="26" />
+      <module name="openapi-generator.openapi-generator-spring-server.main" target="26" />
+      <module name="openapi-generator.openapi-generator-spring-server.test" target="26" />
+    </bytecodeTargetLevel>
   </component>
 </project>

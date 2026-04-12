@@ -9,10 +9,10 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/openapi-generator-core" />
-            <option value="$PROJECT_DIR$/openapi-generator-database-exporter" />
-            <option value="$PROJECT_DIR$/openapi-generator-showcase" />
-            <option value="$PROJECT_DIR$/openapi-generator-spring-server" />
+            <option value="$PROJECT_DIR$/specgen-core" />
+            <option value="$PROJECT_DIR$/specgen-database-exporter" />
+            <option value="$PROJECT_DIR$/specgen-showcase" />
+            <option value="$PROJECT_DIR$/specgen-spring-server" />
           </set>
         </option>
       </GradleProjectSettings>

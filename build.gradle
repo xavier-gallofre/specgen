@@ -3,7 +3,7 @@ plugins {
 }
 
 allprojects {
-    group = 'com.openapi.generator'
+    group = 'com.specgen'
     version = '1.0.0'
 
     repositories {
