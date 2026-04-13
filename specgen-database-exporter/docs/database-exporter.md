@@ -111,6 +111,56 @@ java CliExporterApp --jdbc jdbc_url [directorio_salida]
 
 Esta utilidad genera exclusivamente los **parciales intermedios** (archivos `.txt` en `intermediate/partials`), facilitando la integración en flujos de CI/CD donde la generación de la especificación OpenAPI final se delega a un paso posterior de consolidación (merge).
 
+## Diccionarios de Nombres (Renombrado de Tablas y Columnas)
+
+El exportador permite utilizar diccionarios en formato CSV para renombrar tablas y columnas. Esto es útil cuando los nombres en la base de datos no siguen las convenciones deseadas para la API.
+
+### Configuración del Diccionario
+
+Se utiliza la clase `NameDictionary` para cargar los archivos CSV:
+
+```java
+NameDictionary dictionary = new NameDictionary();
+dictionary.loadTableDictionary("tablas.csv");
+dictionary.loadColumnDictionary("columnas.csv");
+dictionary.loadGeneralDictionary("terminos_generales.csv");
+
+// Aplicar al inspector
+DatabaseInspector inspector = new DatabaseInspector();
+inspector.setDictionary(dictionary);
+
+// O al SqlInspector
+SqlInspector sqlInspector = new SqlInspector();
+sqlInspector.setDictionary(dictionary);
+```
+
+### Formato de los Archivos CSV
+
+Los archivos deben tener el formato `nombre_original,nuevo_nombre` (uno por línea).
+
+*   **Diccionario de Tablas**: Traduce nombres de tablas.
+    *   Ejemplo: `T_USUARIOS,Usuario`
+*   **Diccionario de Columnas**: Soporta nombres específicos (Tabla.Columna) y genéricos.
+    *   Ejemplo: `T_USUARIOS.USR_ID,id` (específico)
+    *   Ejemplo: `USR_NAME,nombre` (genérico para cualquier tabla)
+*   **Diccionario General**: Términos que se aplican si no se encuentra en los anteriores.
+    *   Ejemplo: `DESC,descripcion`
+
+### Prioridad de Resolución
+
+La prioridad al buscar un nombre es la siguiente:
+
+1.  **Tablas**:
+    1.  Diccionario de Tablas.
+    2.  Diccionario General.
+    3.  Nombre original (si no hay coincidencia).
+
+2.  **Columnas**:
+    1.  Columna específica (`Tabla.Columna`) en el Diccionario de Columnas.
+    2.  Nombre de columna genérico en el Diccionario de Columnas.
+    3.  Diccionario General.
+    4.  Nombre original (si no hay coincidencia).
+
 ## Dependencias
 
 *   `specgen-core`: Para los modelos y el motor de generación.

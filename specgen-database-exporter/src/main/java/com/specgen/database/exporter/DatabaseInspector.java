@@ -21,6 +21,20 @@ import java.util.Map;
  */
 public class DatabaseInspector {
 
+    private NameDictionary dictionary;
+
+    public void setDictionary(NameDictionary dictionary) {
+        this.dictionary = dictionary;
+    }
+
+    private String getTableName(String original) {
+        return dictionary != null ? dictionary.resolveTableName(original) : original;
+    }
+
+    private String getColumnName(String tableName, String original) {
+        return dictionary != null ? dictionary.resolveColumnName(tableName, original) : original;
+    }
+
     /**
      * Genera un OpenApiSpec a partir de una lista de tablas utilizando Hibernate para la gestión de la conexión
      * y metadatos, garantizando independencia de la base de datos.
@@ -111,7 +125,7 @@ public class DatabaseInspector {
             tryFetchColumns(metaData, null, null, tableName, properties);
         }
         
-        return new ModelDefinition(tableName, properties, List.of("CRUD"));
+        return new ModelDefinition(getTableName(tableName), properties, List.of("CRUD"));
     }
 
     private boolean tryFetchColumns(DatabaseMetaData metaData, String catalog, String schema, String name, Map<String, PropertyDefinition> properties) throws SQLException {
@@ -120,11 +134,12 @@ public class DatabaseInspector {
             while (columns.next()) {
                 found = true;
                 String columnName = columns.getString("COLUMN_NAME");
+                String translatedColumnName = getColumnName(name, columnName);
                 String typeName = columns.getString("TYPE_NAME");
                 int columnSize = columns.getInt("COLUMN_SIZE");
                 int nullable = columns.getInt("NULLABLE");
 
-                properties.put(columnName, new PropertyDefinition(
+                properties.put(translatedColumnName, new PropertyDefinition(
                     mapSqlTypeToOpenApi(typeName),
                     "Columna " + columnName + " de tipo " + typeName,
                     columnSize > 0 ? columnSize : null,

@@ -20,6 +20,10 @@ public class SqlInspector {
         this.databaseInspector = new DatabaseInspector();
     }
 
+    public void setDictionary(NameDictionary dictionary) {
+        this.databaseInspector.setDictionary(dictionary);
+    }
+
     /**
      * Genera un OpenApiSpec a partir de un script SQL DDL.
      * 
