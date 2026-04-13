@@ -1,6 +1,7 @@
 package com.specgen.showcase;
 
 import com.specgen.core.utils.FileUtils;
+import com.specgen.core.utils.Workspace;
 import com.specgen.database.exporter.DatabaseExportFileWriter;
 
 import java.io.Console;
@@ -19,20 +20,47 @@ import java.util.stream.Collectors;
 public class CliExporterApp {
 
     public static void main(String[] args) {
-        if (args.length < 2) {
+        if (args.length < 1) {
             printUsage();
             return;
         }
 
-        String mode = args[0];
-        String source = args[1];
-        String outputDir = args.length > 2 ? args[2] : "specgen-showcase/generated";
+        String mode = null;
+        String source = null;
+        String workspacePath = null;
+        String explicitPropsPath = null;
+
+        for (int i = 0; i < args.length; i++) {
+            if ("--workspace".equalsIgnoreCase(args[i]) && i + 1 < args.length) {
+                workspacePath = args[++i];
+            } else if ("--properties".equalsIgnoreCase(args[i]) && i + 1 < args.length) {
+                explicitPropsPath = args[++i];
+            } else if (args[i].startsWith("--") && mode == null) {
+                mode = args[i];
+                if (i + 1 < args.length) {
+                    source = args[++i];
+                }
+            } else if (source == null) {
+                source = args[i];
+            }
+        }
+
+        if (mode == null) {
+            printUsage();
+            return;
+        }
 
         try {
+            workspacePath = workspacePath != null ? workspacePath : "workspaces/showcase";
+            Workspace workspace = workspacePath != null ? new Workspace(workspacePath) : null;
+
             if ("--sql".equalsIgnoreCase(mode)) {
-                handleSqlMode(source, outputDir);
+                handleSqlMode(source, workspace, explicitPropsPath);
             } else if ("--jdbc".equalsIgnoreCase(mode)) {
-                handleJdbcMode(outputDir);
+                // Si no hay workspace, el argumento después de --jdbc podría ser el outputDir
+                // Pero con el nuevo parseo, source sería ese argumento si no hay workspace
+                String outputDir = (workspace == null) ? source : null;
+                handleJdbcMode(workspace, outputDir, explicitPropsPath);
             } else {
                 System.out.println("Error: Modo no reconocido '" + mode + "'");
                 printUsage();
@@ -43,7 +71,7 @@ public class CliExporterApp {
         }
     }
 
-    private static void handleSqlMode(String sqlFilePath, String outputDir) throws Exception {
+    private static void handleSqlMode(String sqlFilePath, Workspace workspace, String explicitPropsPath) throws Exception {
         Path path = Path.of(sqlFilePath);
         if (!Files.exists(path)) {
             throw new IOException("El archivo SQL no existe: " + sqlFilePath);
@@ -61,25 +89,23 @@ public class CliExporterApp {
 
         System.out.println("Tablas detectadas: " + tableNames);
 
-        Properties props = FileUtils.loadProperties("application.properties");
-        DatabaseExportFileWriter writer = new DatabaseExportFileWriter((Map) props);
+        Map<String, Object> propsMap = loadConfiguration(workspace, explicitPropsPath);
 
-        // Nota: SqlInspector actualmente no tiene un método directo para parciales en DatabaseExportFileWriter
-        // pero podemos usar el SqlInspector directamente y luego serializar. 
-        // Sin embargo, para mantener la consistencia con el flujo de parciales,
-        // vamos a añadir un método a DatabaseExportFileWriter o simularlo aquí.
-        
-        // Vamos a usar una aproximación que use la infraestructura existente.
+        DatabaseExportFileWriter writer = new DatabaseExportFileWriter(propsMap);
+        if (workspace != null) {
+            writer.setWorkspace(workspace);
+        }
+
         com.specgen.database.exporter.SqlInspector sqlInspector = new com.specgen.database.exporter.SqlInspector();
         com.specgen.core.model.OpenApiSpec spec = sqlInspector.exportFromSql(ddl, tableNames);
         
-        savePartials(spec, (Map) props, outputDir);
+        savePartials(spec, propsMap, workspace);
         
-        System.out.println("Parciales generados con éxito en: " + outputDir);
+        System.out.println("Parciales generados con éxito");
     }
 
-    private static void handleJdbcMode(String outputDir) throws Exception {
-        Properties props = FileUtils.loadProperties("application.properties");
+    private static void handleJdbcMode(Workspace workspace, String outputDir, String explicitPropsPath) throws Exception {
+        Map<String, Object> propsMap = loadConfiguration(workspace, explicitPropsPath);
         
         String user;
         char[] password;
@@ -97,8 +123,18 @@ public class CliExporterApp {
             password = scanner.nextLine().toCharArray();
         }
 
-        props.setProperty("hibernate.connection.username", user);
-        props.setProperty("hibernate.connection.password", new String(password));
+        propsMap.put("hibernate.connection.username", user);
+        propsMap.put("hibernate.connection.password", new String(password));
+        
+        // Sincronizar con jakarta por si acaso
+        propsMap.put("jakarta.persistence.jdbc.user", user);
+        propsMap.put("jakarta.persistence.jdbc.password", new String(password));
+        if (propsMap.containsKey("hibernate.connection.url")) {
+            propsMap.put("jakarta.persistence.jdbc.url", propsMap.get("hibernate.connection.url"));
+        }
+        if (propsMap.containsKey("hibernate.connection.driver_class")) {
+            propsMap.put("jakarta.persistence.jdbc.driver", propsMap.get("hibernate.connection.driver_class"));
+        }
 
         // En un entorno real, pediríamos también las tablas, pero para el showcase
         // usaremos las del init.sql o dejaremos que el usuario las introduzca
@@ -114,17 +150,60 @@ public class CliExporterApp {
             return;
         }
 
-        DatabaseExportFileWriter writer = new DatabaseExportFileWriter((Map) props);
+        DatabaseExportFileWriter writer = new DatabaseExportFileWriter(propsMap);
+        if (workspace != null) {
+            writer.setWorkspace(workspace);
+        }
         System.out.println("Conectando a la base de datos y generando parciales...");
-        writer.exportToIntermediatePartialFiles((Map) props, tableNames, outputDir);
+        writer.exportToIntermediatePartialFiles(propsMap, tableNames, outputDir);
         
-        System.out.println("Parciales generados con éxito en: " + outputDir);
+        System.out.println("Parciales generados con éxito");
     }
 
-    private static void savePartials(com.specgen.core.model.OpenApiSpec spec, Map<String, Object> config, String outputDir) throws Exception {
+    private static Map<String, Object> loadConfiguration(Workspace workspace, String explicitPropsPath) throws IOException {
+        Map<String, Object> propsMap = new java.util.HashMap<>();
+        if (workspace != null) {
+            workspace.getProperties().forEach((k, v) -> propsMap.put(k.toString(), v));
+        } else {
+            Properties props = new Properties();
+            if (explicitPropsPath != null) {
+                Path path = Path.of(explicitPropsPath).toAbsolutePath();
+                if (Files.exists(path)) {
+                    try (var is = Files.newInputStream(path)) {
+                        props.load(is);
+                    }
+                } else {
+                    throw new IOException("El archivo de propiedades explícito no existe: " + explicitPropsPath);
+                }
+            } else {
+                // Carga por defecto
+                String[] propsFileNames = {"application.properties", "specgen-showcase/application.properties"};
+                boolean loaded = false;
+                for (String fileName : propsFileNames) {
+                    Path path = Path.of(fileName).toAbsolutePath();
+                    if (Files.exists(path)) {
+                        try (var is = Files.newInputStream(path)) {
+                            props.load(is);
+                            loaded = true;
+                            break;
+                        } catch (IOException ignored) {}
+                    }
+                }
+                if (!loaded) {
+                    try {
+                        props = FileUtils.loadProperties("application.properties");
+                    } catch (Exception ignored) {}
+                }
+            }
+            props.forEach((k, v) -> propsMap.put(k.toString(), v.toString()));
+        }
+        return propsMap;
+    }
+
+    private static void savePartials(com.specgen.core.model.OpenApiSpec spec, Map<String, Object> config, Workspace workspace) throws Exception {
         com.specgen.core.utils.YamlSerializer yamlSerializer = new com.specgen.core.utils.YamlSerializer();
         
-        Path basePath = Path.of(outputDir);
+        Path basePath = workspace != null ? workspace.getGeneratedPath() : Path.of("generated");
         Path intermediatePartialsPath = basePath.resolve("intermediate/partials");
 
         for (com.specgen.core.model.ModelDefinition model : spec.models()) {
@@ -146,11 +225,15 @@ public class CliExporterApp {
     }
 
     private static void printUsage() {
-        System.out.println("Uso: CliExporterApp <modo> <origen> [directorio_salida]");
+        System.out.println("Uso: CliExporterApp [--workspace <ruta>] [--properties <ruta>] <modo> <origen>");
+        System.out.println("Opciones:");
+        System.out.println("  --workspace <ruta>           : Define la zona de trabajo (templates, dictionary, properties).");
+        System.out.println("  --properties <ruta>          : Archivo de propiedades de base de datos (alternativo a application.properties).");
         System.out.println("Modos:");
         System.out.println("  --sql <ruta_al_archivo.sql>  : Genera parciales desde un archivo DDL.");
-        System.out.println("  --jdbc <cualquier_valor>     : Genera parciales desde una base de datos (pide credenciales).");
+        System.out.println("  --jdbc <output_dir>          : Genera parciales desde una base de datos (pide credenciales).");
         System.out.println("Ejemplo:");
-        System.out.println("  java CliExporterApp --sql schema.sql ./generated");
+        System.out.println("  java CliExporterApp --workspace ./workspaces/showcase --sql schema.sql");
+        System.out.println("  java CliExporterApp --jdbc ./generated --properties my-db.properties");
     }
 }

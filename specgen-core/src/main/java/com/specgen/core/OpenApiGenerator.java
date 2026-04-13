@@ -3,6 +3,7 @@ package com.specgen.core;
 import com.specgen.core.model.OpenApiSpec;
 import com.specgen.core.utils.FileUtils;
 import com.specgen.core.utils.TextUtils;
+import com.specgen.core.utils.Workspace;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
@@ -19,6 +20,7 @@ public class OpenApiGenerator {
 
     private final Configuration cfg;
     private final Map<String, Object> additionalProperties;
+    private Workspace workspace;
 
     public OpenApiGenerator() {
         this(new HashMap<>());
@@ -41,17 +43,33 @@ public class OpenApiGenerator {
         this.additionalProperties.put("textUtils", new TextUtils());
     }
 
+    public void setWorkspace(Workspace workspace) {
+        this.workspace = workspace;
+        if (workspace != null && workspace.hasTemplates()) {
+            try {
+                cfg.setDirectoryForTemplateLoading(workspace.getTemplatesPath().toFile());
+            } catch (IOException e) {
+                throw new RuntimeException("Error al configurar el directorio de plantillas del workspace", e);
+            }
+        }
+    }
+
     /**
      * Genera un fragmento de la especificación OpenAPI usando una plantilla específica.
      */
     public String generateFragment(OpenApiSpec spec, String modelName, String templateName) throws IOException, TemplateException {
         // Soporte para configurar el recurso externo de plantillas si se define en las propiedades
-        if (additionalProperties.containsKey("templates.path")) {
+        if (workspace != null && workspace.hasTemplates()) {
+             cfg.setDirectoryForTemplateLoading(workspace.getTemplatesPath().toFile());
+        } else if (additionalProperties.containsKey("templates.path")) {
             String path = (String) additionalProperties.get("templates.path");
             Path templateDirPath = Path.of(path);
             if (Files.exists(templateDirPath) && Files.isDirectory(templateDirPath)) {
                 cfg.setDirectoryForTemplateLoading(templateDirPath.toFile());
             }
+        } else {
+            // Volver a la carga por defecto
+            cfg.setClassForTemplateLoading(OpenApiGenerator.class, "/templates");
         }
 
         var model = spec.models().stream()
@@ -83,12 +101,17 @@ public class OpenApiGenerator {
      */
     public String generate(OpenApiSpec spec) throws IOException, TemplateException {
         // Soporte para configurar el recurso externo de plantillas si se define en las propiedades
-        if (additionalProperties.containsKey("templates.path")) {
+        if (workspace != null && workspace.hasTemplates()) {
+            cfg.setDirectoryForTemplateLoading(workspace.getTemplatesPath().toFile());
+        } else if (additionalProperties.containsKey("templates.path")) {
             String path = (String) additionalProperties.get("templates.path");
             Path templateDirPath = Path.of(path);
             if (Files.exists(templateDirPath) && Files.isDirectory(templateDirPath)) {
                 cfg.setDirectoryForTemplateLoading(templateDirPath.toFile());
             }
+        } else {
+            // Volver a la carga por defecto si no hay workspace ni path explícito
+            cfg.setClassForTemplateLoading(OpenApiGenerator.class, "/templates");
         }
 
         Template temp = cfg.getTemplate("main.ftl");

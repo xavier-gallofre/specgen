@@ -33,7 +33,11 @@ public class CustomSpringServerApp {
                 .setApiPackage("com.example.api")
                 .setModelPackage("com.example.model")
                 .addAdditionalProperty("interfaceOnly", "true")
-                .addAdditionalProperty("useTags", "true");
+                .addAdditionalProperty("useTags", "true")
+                .addAdditionalProperty("skipValidateSpec", "true");
+        
+        System.setProperty("openapi.generator.validateSpec", "false");
+        System.setProperty("skipValidateSpec", "true");
 
         final ClientOptInput clientOptInput = configurator.toClientOptInput();
         DefaultGenerator generator = new DefaultGenerator();

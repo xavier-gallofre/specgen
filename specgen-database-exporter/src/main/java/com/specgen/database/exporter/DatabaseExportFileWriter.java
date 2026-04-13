@@ -4,6 +4,7 @@ import com.specgen.core.OpenApiGenerator;
 import com.specgen.core.model.ModelDefinition;
 import com.specgen.core.model.OpenApiSpec;
 import com.specgen.core.utils.FileUtils;
+import com.specgen.core.utils.Workspace;
 import com.specgen.core.utils.YamlSerializer;
 
 import java.io.IOException;
@@ -24,6 +25,7 @@ public class DatabaseExportFileWriter {
     private final YamlSerializer yamlSerializer;
     private final OpenApiGenerator generator;
     private ExportRuleManager ruleManager;
+    private Workspace workspace;
 
     public DatabaseExportFileWriter() {
         this(new java.util.HashMap<>());
@@ -38,6 +40,29 @@ public class DatabaseExportFileWriter {
         this.ruleManager = ruleManager;
         this.inspector.setRuleManager(ruleManager);
         this.sqlInspector.setRuleManager(ruleManager);
+    }
+
+    public void setWorkspace(Workspace workspace) {
+        this.workspace = workspace;
+        this.generator.setWorkspace(workspace);
+        if (workspace != null && workspace.hasDictionary()) {
+            NameDictionary dictionary = new NameDictionary();
+            Path dictPath = workspace.getDictionaryPath();
+            try {
+                if (Files.exists(dictPath.resolve("tables.csv"))) {
+                    dictionary.loadTableDictionary(dictPath.resolve("tables.csv").toString());
+                }
+                if (Files.exists(dictPath.resolve("columns.csv"))) {
+                    dictionary.loadColumnDictionary(dictPath.resolve("columns.csv").toString());
+                }
+                if (Files.exists(dictPath.resolve("general.csv"))) {
+                    dictionary.loadGeneralDictionary(dictPath.resolve("general.csv").toString());
+                }
+                this.setDictionary(dictionary);
+            } catch (IOException e) {
+                throw new RuntimeException("Error al cargar diccionarios del workspace", e);
+            }
+        }
     }
 
     private void writeReviewReport(String baseOutputDir) throws IOException {
@@ -57,7 +82,9 @@ public class DatabaseExportFileWriter {
                 entry.tableName(), entry.columnName(), entry.note(), partialLink));
         }
 
-        FileUtils.writeToFile(Path.of(baseOutputDir).resolve("revisar.md").toString(), sb.toString());
+        Path basePath = baseOutputDir != null ? Path.of(baseOutputDir) : 
+                       (workspace != null ? workspace.getGeneratedPath() : Path.of("generated"));
+        FileUtils.writeToFile(basePath.resolve("revisar.md").toString(), sb.toString());
     }
 
     /**
@@ -78,7 +105,8 @@ public class DatabaseExportFileWriter {
         try {
             OpenApiSpec spec = inspector.exportFromTables(settings, tableNames);
             
-            Path basePath = Path.of(baseOutputDir);
+            Path basePath = baseOutputDir != null ? Path.of(baseOutputDir) : 
+                           (workspace != null ? workspace.getGeneratedPath() : Path.of("generated"));
             Path intermediatePartialsPath = basePath.resolve("intermediate/partials");
             Path openapiPartialsPath = basePath.resolve("openapi/partials");
 
@@ -113,7 +141,9 @@ public class DatabaseExportFileWriter {
     public void exportToIntermediatePartialFiles(Map<String, Object> settings, List<String> tableNames, String baseOutputDir) throws IOException {
         try {
             OpenApiSpec spec = inspector.exportFromTables(settings, tableNames);
-            Path intermediatePartialsPath = Path.of(baseOutputDir).resolve("intermediate/partials");
+            Path basePath = baseOutputDir != null ? Path.of(baseOutputDir) : 
+                           (workspace != null ? workspace.getGeneratedPath() : Path.of("generated"));
+            Path intermediatePartialsPath = basePath.resolve("intermediate/partials");
 
             for (ModelDefinition model : spec.models()) {
                 String modelYaml = yamlSerializer.serialize(model);
@@ -121,7 +151,7 @@ public class DatabaseExportFileWriter {
             }
             writeReviewReport(baseOutputDir);
         } catch (Exception e) {
-            throw new IOException("Error al generar archivos parciales intermedios", e);
+            throw new IOException("Error al generar archivos parciales intermedios: " + e.getMessage(), e);
         }
     }
 
@@ -133,7 +163,8 @@ public class DatabaseExportFileWriter {
      */
     public void mergePartials(String baseOutputDir, String finalIntermediateName, String finalOpenApiName) throws IOException {
         try {
-            Path basePath = Path.of(baseOutputDir);
+            Path basePath = baseOutputDir != null ? Path.of(baseOutputDir) : 
+                           (workspace != null ? workspace.getGeneratedPath() : Path.of("generated"));
             Path intermediatePartialsPath = basePath.resolve("intermediate/partials");
             Path openapiPartialsPath = basePath.resolve("openapi/partials");
 

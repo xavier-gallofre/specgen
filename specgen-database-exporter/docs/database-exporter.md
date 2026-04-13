@@ -111,6 +111,25 @@ java CliExporterApp --jdbc jdbc_url [directorio_salida]
 
 Esta utilidad genera exclusivamente los **parciales intermedios** (archivos `.txt` en `intermediate/partials`), facilitando la integración en flujos de CI/CD donde la generación de la especificación OpenAPI final se delega a un paso posterior de consolidación (merge).
 
+### Uso de Espacios de Trabajo (Workspaces)
+
+El generador soporta el concepto de "Workspace" para organizar proyectos. Un workspace es un directorio que contiene:
+*   `workspace.properties`: Configuración específica del proyecto.
+*   `templates/`: Plantillas Freemarker personalizadas.
+*   `dictionary/`: Diccionarios CSV (`tables.csv`, `columns.csv`, `general.csv`).
+*   `generated/`: Carpeta donde se volcarán los resultados por defecto.
+
+Si se define un workspace, el sistema cargará automáticamente los diccionarios y usará las plantillas de dicha carpeta, cayendo en las plantillas por defecto del core si no se encuentran.
+
+```java
+Workspace ws = new Workspace("workspaces/mi-proyecto");
+DatabaseExportFileWriter writer = new DatabaseExportFileWriter();
+writer.setWorkspace(ws);
+
+// Genera archivos en workspaces/mi-proyecto/generated
+writer.exportToPartialFiles(dbSettings, List.of("USERS"), null);
+```
+
 ## Diccionarios de Nombres (Renombrado de Tablas y Columnas)
 
 El exportador permite utilizar diccionarios en formato CSV para renombrar tablas y columnas. Esto es útil cuando los nombres en la base de datos no siguen las convenciones deseadas para la API.

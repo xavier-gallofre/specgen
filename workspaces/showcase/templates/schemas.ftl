@@ -21,11 +21,6 @@
 <#list model.properties()?keys as propName>
 <#assign prop = model.properties()[propName]>
 <@property_template prop=prop propName=propName />
-        ${propName}:
-          type: ${prop.type()}
-<#if prop.description()??>
-          description: ${prop.description()}
-</#if>
 </#list>
     ${textUtils.capitalize(textUtils.singularize(model.name()))}Form:
       title: ${textUtils.capitalize(textUtils.singularize(model.name()))} (Form)
@@ -35,12 +30,7 @@
 <#list model.properties()?keys as propName>
 <#assign prop = model.properties()[propName]>
 <#if propName != "id">
-        ${propName}:
-          type: ${prop.type()}
-<#if prop.description()??>
-          description: ${prop.description()}
 <@property_template prop=prop propName=propName />
-</#if>
 </#if>
 </#list>
 </#list>

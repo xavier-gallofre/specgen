@@ -48,12 +48,20 @@ public class OracleCliIntegrationTest {
         
         // El CliExporterApp usa FileUtils.loadProperties("application.properties")
         // Vamos a crear un application.properties temporal en la raíz para el test.
-        Path propsPath = Path.of("application.properties");
+        Path propsPath = Path.of("application.properties").toAbsolutePath();
         Properties props = new Properties();
         props.setProperty("hibernate.connection.url", jdbcUrl);
+        props.setProperty("hibernate.connection.username", username);
+        props.setProperty("hibernate.connection.password", password);
         props.setProperty("hibernate.connection.driver_class", oracle.getDriverClassName());
         props.setProperty("hibernate.dialect", "org.hibernate.dialect.OracleDialect");
         props.setProperty("hibernate.default_schema", username.toUpperCase());
+        // Forzar dialecto explícito para evitar problemas de detección automática en entornos restrictivos
+        props.setProperty("hibernate.dialect", "org.hibernate.dialect.OracleDialect");
+        props.setProperty("jakarta.persistence.jdbc.driver", oracle.getDriverClassName());
+        props.setProperty("jakarta.persistence.jdbc.url", jdbcUrl);
+        props.setProperty("jakarta.persistence.jdbc.user", username);
+        props.setProperty("jakarta.persistence.jdbc.password", password);
         
         // Guardar propiedades originales si existen para restaurarlas
         String originalProps = null;
@@ -62,19 +70,22 @@ public class OracleCliIntegrationTest {
         }
         
         try {
-            java.io.Writer writer = Files.newBufferedWriter(propsPath);
-            props.store(writer, "Test properties");
-            writer.close();
-
+            java.io.Writer propsWriter = Files.newBufferedWriter(propsPath);
+            props.store(propsWriter, "Test properties");
+            propsWriter.close();
+            
             // 3. Simular la entrada del usuario (User, Password, Tables)
             String input = username + "\n" + password + "\nEMPLOYEES\n";
             InputStream originalIn = System.in;
             System.setIn(new ByteArrayInputStream(input.getBytes()));
 
             try {
-                // 4. Ejecutar CLI
+                // 4. Ejecutar CLI con ruta de propiedades explícita
                 String outputDir = tempDir.resolve("generated").toString();
-                CliExporterApp.main(new String[]{"--jdbc", "ignored", outputDir});
+                CliExporterApp.main(new String[]{
+                    "--jdbc", outputDir, 
+                    "--properties", propsPath.toString()
+                });
 
                 // 5. Verificar resultados
                 Path partialPath = tempDir.resolve("generated/intermediate/partials/EMPLOYEES.txt");

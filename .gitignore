@@ -143,3 +143,4 @@ gradle-app.setting
 
 # End of https://www.toptal.com/developers/gitignore/api/intellij,gradle
 /specgen-showcase/generated/
+/workspaces/**/generated/
