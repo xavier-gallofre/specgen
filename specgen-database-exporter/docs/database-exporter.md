@@ -134,6 +134,22 @@ SqlInspector sqlInspector = new SqlInspector();
 sqlInspector.setDictionary(dictionary);
 ```
 
+## Adaptación de Plantillas por Tipo
+
+El generador de esquemas (`schemas.ftl`) utiliza plantillas específicas para cada tipo de propiedad. Si no se encuentra una plantilla específica, se utiliza una genérica.
+
+### Plantillas Disponibles
+- `property_string.ftl`: Para propiedades de tipo `string`.
+- `property_number.ftl`: Para propiedades de tipo `integer` y `number`.
+- `property_boolean.ftl`: Para propiedades de tipo `boolean`.
+- `property_date.ftl`: Para propiedades de tipo `date` (genera `format: date`).
+- `property_generic.ftl`: Plantilla por defecto para cualquier otro tipo.
+
+Esto permite personalizar la generación de YAML para cada tipo de dato de forma independiente, facilitando la inclusión de campos específicos como `maxLength`, `format`, o validaciones personalizadas.
+
+### Mapeo de Tipos de Fecha
+El exportador ahora mapea los tipos SQL `DATE`, `TIMESTAMP` y `TIME` al tipo intermedio `date`, lo que activa automáticamente el uso de la plantilla `property_date.ftl` en la generación de la especificación OpenAPI.
+
 ### Formato de los Archivos CSV
 
 Los archivos deben tener el formato `nombre_original,nuevo_nombre` (uno por línea).

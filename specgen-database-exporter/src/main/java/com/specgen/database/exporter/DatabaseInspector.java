@@ -182,7 +182,7 @@ public class DatabaseInspector {
             case "INTEGER", "INT", "SMALLINT", "TINYINT", "BIGINT" -> "integer";
             case "DECIMAL", "NUMERIC", "DOUBLE", "FLOAT", "REAL", "NUMBER" -> "number";
             case "BOOLEAN", "BIT" -> "boolean";
-            case "DATE", "TIMESTAMP", "TIME", "TIMESTAMP WITH TIME ZONE" -> "string";
+            case "DATE", "TIMESTAMP", "TIME", "TIMESTAMP WITH TIME ZONE" -> "date";
             default -> "string";
         };
     }

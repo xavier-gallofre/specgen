@@ -44,12 +44,13 @@ public class DatabaseExporterIntegrationTest {
             // Forzamos el esquema por defecto para evitar INFORMATION_SCHEMA
             settings.put("hibernate.default_schema", "PUBLIC");
 
-            OpenApiSpec spec = inspector.exportFromTables(settings, List.of("CUSTOMERS"));
+            OpenApiSpec spec = inspector.exportFromTables(settings, List.of("CUSTOMERS", "TEMPLATE_TEST"));
 
             // 3. Validate that the pseudo-format is correctly generated
             assertNotNull(spec, "The OpenApiSpec should not be null");
-            assertEquals(1, spec.models().size(), "Should have exactly one model");
+            assertEquals(2, spec.models().size(), "Should have exactly two models");
             assertEquals("CUSTOMERS", spec.models().get(0).name(), "The model name should be CUSTOMERS");
+            assertEquals("TEMPLATE_TEST", spec.models().get(1).name(), "The model name should be TEMPLATE_TEST");
             
             var customerModel = spec.models().get(0);
             assertTrue(customerModel.properties().containsKey("ID"), "Should contain ID property");
@@ -60,6 +61,14 @@ public class DatabaseExporterIntegrationTest {
             assertEquals("string", customerModel.properties().get("FIRST_NAME").type());
             assertEquals(50, customerModel.properties().get("FIRST_NAME").maxLength());
             assertTrue(customerModel.properties().get("FIRST_NAME").required());
+
+            var templateModel = spec.models().get(1);
+            assertEquals("number", templateModel.properties().get("ID").type());
+            assertEquals("string", templateModel.properties().get("TEXT_COL").type());
+            assertEquals("number", templateModel.properties().get("NUM_COL").type());
+            assertEquals("boolean", templateModel.properties().get("BOOL_COL").type());
+            assertEquals("date", templateModel.properties().get("DATE_COL").type());
+            assertEquals("string", templateModel.properties().get("GENERIC_COL").type()); // BLOB mapeado a string por defecto en mapSqlTypeToOpenApi
             
             // 4. Test YAML Serialization
             YamlSerializer serializer = new YamlSerializer();
