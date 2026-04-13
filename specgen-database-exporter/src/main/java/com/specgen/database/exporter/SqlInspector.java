@@ -24,6 +24,10 @@ public class SqlInspector {
         this.databaseInspector.setDictionary(dictionary);
     }
 
+    public void setRuleManager(ExportRuleManager ruleManager) {
+        this.databaseInspector.setRuleManager(ruleManager);
+    }
+
     /**
      * Genera un OpenApiSpec a partir de un script SQL DDL.
      * 
@@ -32,6 +36,7 @@ public class SqlInspector {
      * @return OpenApiSpec con la definición de las tablas.
      */
     public OpenApiSpec exportFromSql(String ddl, List<String> tableNames) {
+        System.out.println("[DEBUG_LOG] SqlInspector.exportFromSql called");
         // Usamos un nombre de BD único para evitar colisiones si se ejecuta en paralelo
         String dbName = "sql_inspector_" + UUID.randomUUID().toString().replace("-", "");
         String url = "jdbc:h2:mem:" + dbName + ";DB_CLOSE_DELAY=-1;MODE=Oracle";

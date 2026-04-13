@@ -20,11 +20,16 @@ import java.util.Map;
  * Servicio encargado de inspeccionar la base de datos y generar un OpenApiSpec.
  */
 public class DatabaseInspector {
-
+    
     private NameDictionary dictionary;
+    private ExportRuleManager ruleManager;
 
     public void setDictionary(NameDictionary dictionary) {
         this.dictionary = dictionary;
+    }
+
+    public void setRuleManager(ExportRuleManager ruleManager) {
+        this.ruleManager = ruleManager;
     }
 
     private String getTableName(String original) {
@@ -139,12 +144,18 @@ public class DatabaseInspector {
                 int columnSize = columns.getInt("COLUMN_SIZE");
                 int nullable = columns.getInt("NULLABLE");
 
-                properties.put(translatedColumnName, new PropertyDefinition(
+                PropertyDefinition prop = new PropertyDefinition(
                     mapSqlTypeToOpenApi(typeName),
                     "Columna " + columnName + " de tipo " + typeName,
                     columnSize > 0 ? columnSize : null,
                     nullable == DatabaseMetaData.columnNoNulls
-                ));
+                );
+
+                if (ruleManager != null) {
+                    prop = ruleManager.applyRules(name, columnName, typeName, columnSize, prop);
+                }
+
+                properties.put(translatedColumnName, prop);
             }
             return found;
         }

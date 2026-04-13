@@ -161,6 +161,50 @@ La prioridad al buscar un nombre es la siguiente:
     3.  Diccionario General.
     4.  Nombre original (si no hay coincidencia).
 
+## Reglas de Exportación Personalizadas
+
+Es posible aplicar reglas personalizadas durante la inspección de la base de datos para transformar tipos de datos o aplicar lógicas específicas.
+
+### Interfaz `ExportRule`
+Para implementar una regla, debes extender la interfaz `ExportRule`:
+
+```java
+public class MiReglaPersonalizada implements ExportRule {
+    @Override
+    public PropertyDefinition apply(String tableName, String columnName, String sqlType, Integer columnSize, PropertyDefinition currentProp) {
+        // Lógica de transformación
+        return nuevaPropiedad;
+    }
+
+    @Override
+    public String getReviewNote(String tableName, String columnName, String sqlType, Integer columnSize) {
+        // Nota para el informe de revisión (Markdown)
+        return "Se ha aplicado un cambio que requiere revisión.";
+    }
+}
+```
+
+### Transformación VARCHAR(1) a Boolean
+Se incluye de serie la regla `VarcharToBooleanRule`, que detecta columnas de tamaño 1 (VARCHAR, CHAR) y las marca como booleanos, asumiendo que contienen valores como 'S/N', '1/0', etc.
+
+### Registro de Cambios (`revisar.md`)
+Cuando se aplican reglas que modifican el tipo original, se genera automáticamente un archivo `revisar.md` en el directorio de salida. Este informe detalla:
+*   La tabla y columna afectada.
+*   La explicación del riesgo o motivo del cambio.
+*   Un enlace directo al archivo parcial intermedio para facilitar la inspección.
+
+### Configuración
+
+```java
+ExportRuleManager ruleManager = new ExportRuleManager();
+ruleManager.addRule(new VarcharToBooleanRule());
+
+DatabaseExportFileWriter writer = new DatabaseExportFileWriter();
+writer.setRuleManager(ruleManager);
+
+writer.exportToPartialFiles(settings, tables, "outputDir");
+```
+
 ## Dependencias
 
 *   `specgen-core`: Para los modelos y el motor de generación.

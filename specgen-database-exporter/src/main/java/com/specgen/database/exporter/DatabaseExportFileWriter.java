@@ -23,9 +23,41 @@ public class DatabaseExportFileWriter {
     private final SqlInspector sqlInspector;
     private final YamlSerializer yamlSerializer;
     private final OpenApiGenerator generator;
+    private ExportRuleManager ruleManager;
 
     public DatabaseExportFileWriter() {
         this(new java.util.HashMap<>());
+    }
+
+    public void setDictionary(NameDictionary dictionary) {
+        this.inspector.setDictionary(dictionary);
+        this.sqlInspector.setDictionary(dictionary);
+    }
+
+    public void setRuleManager(ExportRuleManager ruleManager) {
+        this.ruleManager = ruleManager;
+        this.inspector.setRuleManager(ruleManager);
+        this.sqlInspector.setRuleManager(ruleManager);
+    }
+
+    private void writeReviewReport(String baseOutputDir) throws IOException {
+        if (ruleManager == null || ruleManager.getReviewLog().isEmpty()) {
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("# Informe de Revisión de Exportación\n\n");
+        sb.append("Se han aplicado reglas automáticas que requieren revisión manual para asegurar la integridad de los datos.\n\n");
+        sb.append("| Tabla | Columna | Riesgo / Explicación | Enlace al Parcial |\n");
+        sb.append("|-------|---------|----------------------|-------------------|\n");
+
+        for (ExportRuleManager.ReviewEntry entry : ruleManager.getReviewLog()) {
+            String partialLink = "intermediate/partials/" + entry.tableName() + ".txt";
+            sb.append(String.format("| %s | %s | %s | [Ver parcial](%s) |\n", 
+                entry.tableName(), entry.columnName(), entry.note(), partialLink));
+        }
+
+        FileUtils.writeToFile(Path.of(baseOutputDir).resolve("revisar.md").toString(), sb.toString());
     }
 
     /**
@@ -68,6 +100,7 @@ public class DatabaseExportFileWriter {
                 String partialOpenApi = "paths:\n" + pathsFragment + "\ncomponents:\n" + schemasFragment;
                 FileUtils.writeToFile(openapiPartialsPath.resolve(model.name() + ".yaml").toString(), partialOpenApi);
             }
+            writeReviewReport(baseOutputDir);
         } catch (Exception e) {
             throw new IOException("Error al generar archivos parciales", e);
         }
@@ -86,6 +119,7 @@ public class DatabaseExportFileWriter {
                 String modelYaml = yamlSerializer.serialize(model);
                 FileUtils.writeToFile(intermediatePartialsPath.resolve(model.name() + ".txt").toString(), modelYaml);
             }
+            writeReviewReport(baseOutputDir);
         } catch (Exception e) {
             throw new IOException("Error al generar archivos parciales intermedios", e);
         }
